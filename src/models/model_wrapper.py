@@ -9,7 +9,6 @@ class ModelWrapper :
     All ModelWraper object must assign the variables :
     img_size, preprocessing, log_name, model, grad_cam_layer
     """
-    img_size:tuple = None
     preprocessing = None
     log_name:str= None
     model:Model = None
@@ -21,14 +20,13 @@ class ModelWrapper :
 
 from keras.applications import mobilenet_v2
 from keras.applications import MobileNetV2
-
 class MobileNetv2(ModelWrapper) :
+
     def __init__(self, img_size:tuple) -> None:
-        self.img_size=img_size
         self.preprocessing = mobilenet_v2.preprocess_input
         self.log_name = 'mobilenetv2'
         self.model = MobileNetV2(
-                input_shape=(img_size, img_size, 3),
+                input_shape=img_size + (3,),
                 include_top=False,
                 alpha=1.0,
                 weights='imagenet',
@@ -41,10 +39,8 @@ class MobileNetv2(ModelWrapper) :
 
 from keras.applications import mobilenet_v3
 from keras.applications import MobileNetV3Large
-
 class MobileNetv3(ModelWrapper):
     def __init__(self, img_size:tuple) -> None:
-        self.img_size=img_size
         self.preprocessing = mobilenet_v3.preprocess_input
         self.log_name = 'mobilenetv3'
         self.model = MobileNetV3Large(
@@ -55,6 +51,26 @@ class MobileNetv3(ModelWrapper):
                 pooling='avg'
         )
         self.grad_cam_layer = 'Conv_1'
+
+
+
+
+from keras.applications import resnet_v2
+from keras.applications import ResNet50V2
+class ResNet50V2(ModelWrapper):
+    def __init__(self, img_size:tuple) -> None:
+        self.preprocessing = resnet_v2.preprocess_input
+        self.log_name = 'resnetv2'
+        self.model = ResNet50V2(
+                input_shape=img_size + (3,),
+                include_top=False,
+                alpha=1.0,
+                weights='imagenet',
+                pooling='avg'
+        )
+        self.grad_cam_layer = 'Conv_1'
+
+
 
 
 

@@ -4,6 +4,7 @@ import src.models as lm
 import src.visualization as lv
 import src.features as lf
 
+import numpy as np
 import pandas as pd
 
 import tensorflow as tf
@@ -16,6 +17,7 @@ from keras.losses import CategoricalCrossentropy, SparseCategoricalCrossentropy,
 from keras.metrics import CategoricalAccuracy
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from keras.preprocessing.image import DataFrameIterator
+from keras.utils import img_to_array, load_img
 
 import pickle
 
@@ -140,6 +142,17 @@ class Trainer():
         ).history
 
 
+    def single_evaluation(self, path: str) -> pd.DataFrame:
+        """
+        Evaluate the model on a single image.
+        ## TODO test this function
+        """
+        self.print_step("Evaluation")
+        img = load_img(path, target_size=self.img_size)
+        img = img_to_array(img)
+        img = self.model_wrapper.preprocessing(img)
+        return self.model.predict(np.expand_dims(img, axis=0))[0]
+
 
     def evaluate(self) -> pd.DataFrame:
         """
@@ -230,6 +243,57 @@ class Stage1MobileNetv3(Trainer):
 
         # set the base model
         self.model_wrapper = lm.model_wrapper.MobileNetv3(self.img_size)
+        self.base_model = self.model_wrapper.model
+
+        # build data flows
+        self.train, self.validation, self.test = lf.data_builder.get_data_flows(self.data_wrapper, self.model_wrapper,
+                                                                                self.batch_size, self.data_augmentation,
+                                                                                self.img_size)
+
+        # encapsulation for facilating gradcam computation
+        ##TODO virer gradcam
+        gradcam_encapsulation = lm.model_wrapper.get_gradcam_encapsulation(self.model_wrapper)
+
+        # Model definition
+        x, gradcam_output = gradcam_encapsulation(self.base_model.input, training=False)
+        x = Dense(128, activation='leaky_relu')(x)
+        x = Dense(224, activation='leaky_relu')(x)
+        output = Dense(12, activation='softmax', name='main')(x)
+        self.model = Model(inputs=self.base_model.input, outputs=[output, gradcam_output])
+
+
+
+    def fit_or_load(self, campain_id=None, training=True):
+        """
+        Fit or load the model for training or inference.
+        Parameters:
+            campain_id (optional): The ID of the campaign to load or serialize.
+            training (bool): A flag indicating whether to perform training or inference.
+        Returns:
+            None
+        """
+        if (training):
+            self.print_step("Training")
+            self.base_model.trainable = False
+            self.compile_fit(lr=self.lr1, epochs=self.epoch1)
+
+            self.print_step("Serialize ")
+            self.serialize(campain_id=campain_id)
+        else:
+            self.print_step("Loading")
+            self.deserialize(campaign_id=campain_id)
+
+
+
+
+class Stage1ResNetv3(Trainer):
+    record_name = "Stage-1_ResNet50v2"
+
+    def __init__(self, data_wrapper):
+        self.data_wrapper = data_wrapper
+
+        # set the base model
+        self.model_wrapper = lm.model_wrapper.ResNet50V2(self.img_size)
         self.base_model = self.model_wrapper.model
 
         # build data flows

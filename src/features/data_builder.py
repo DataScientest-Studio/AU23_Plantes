@@ -199,7 +199,7 @@ def get_single_prediction(model: Model, img_path :str) -> np.ndarray:
 
 
 
-def make_gradcam_heatmap(img_array: np.ndarray, model : Model) -> np.ndarray:
+def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model, model_wrapper: lm.model_wrapper.ModelWrapper) -> np.ndarray:
     """
     Generates a Grad-CAM heatmap for a given input image array using a model.
 
@@ -211,7 +211,9 @@ def make_gradcam_heatmap(img_array: np.ndarray, model : Model) -> np.ndarray:
         numpy.ndarray: The Grad-CAM heatmap.
     """
     with tf.GradientTape() as tape:
-        preds, last_conv_layer_output = model(img_array)
+        #TODO ajouter la couche de preprocessing ..
+
+        preds, last_conv_layer_output = complete_model(img_array)
         pred_index = tf.argmax(preds[0])
         class_channel = preds[:, pred_index]
     grads = tape.gradient(class_channel, last_conv_layer_output)
