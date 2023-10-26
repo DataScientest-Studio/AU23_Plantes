@@ -9,11 +9,11 @@ class ModelWrapper :
     All ModelWraper object must assign the variables :
     img_size, preprocessing, log_name, model, grad_cam_layer
     """
-    img_size = None
+    img_size:tuple = None
     preprocessing = None
-    log_name = None
-    model = None
-    grad_cam_layer = None
+    log_name:str= None
+    model:Model = None
+    grad_cam_layer:str = None
 
     def __init__(self):
         pass
@@ -23,7 +23,7 @@ from keras.applications import mobilenet_v2
 from keras.applications import MobileNetV2
 
 class MobileNetv2(ModelWrapper) :
-    def __init__(self, img_size):
+    def __init__(self, img_size:tuple) -> None:
         self.img_size=img_size
         self.preprocessing = mobilenet_v2.preprocess_input
         self.log_name = 'mobilenetv2'
@@ -43,12 +43,12 @@ from keras.applications import mobilenet_v3
 from keras.applications import MobileNetV3Large
 
 class MobileNetv3(ModelWrapper):
-    def __init__(self, img_size):
+    def __init__(self, img_size:tuple) -> None:
         self.img_size=img_size
         self.preprocessing = mobilenet_v3.preprocess_input
         self.log_name = 'mobilenetv3'
         self.model = MobileNetV3Large(
-                input_shape=(img_size, img_size, 3),
+                input_shape=img_size + (3,),
                 include_top=False,
                 alpha=1.0,
                 weights='imagenet',
@@ -59,7 +59,7 @@ class MobileNetv3(ModelWrapper):
 
 
 
-def get_gradcam_encapsulation(model_wrapper) :
+def get_gradcam_encapsulation(model_wrapper:ModelWrapper) -> Model:
     """
     Useful for GradCam computation while doing fine-tuning with the training=false argument
 

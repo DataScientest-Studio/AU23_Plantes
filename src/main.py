@@ -7,21 +7,14 @@ from src.models.models import *
 
 
 
-# construction des données
+# Data building
 data_wrapper = lf.data_builder.create_dataset_from_directory('../data/v2-plant-seedlings-dataset/')
 
+
+# Train Campaigns
+campaign_id='test'
+
 step1mobilenet = Step1MobileNetv3(data_wrapper)
-## TODO debug
-step1mobilenet.train()
-print (type(step1mobilenet))
-
-
-# step1mobilenet.train()
-# step1mobilenet.serialize('test')
-# step1mobilenet.evaluate()
-
-
-
-
-# entrainement des modèles
+step1mobilenet.fit_or_load(campain_id=campaign_id, training=False)
+step1mobilenet.evaluate()
 

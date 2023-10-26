@@ -2,10 +2,15 @@ from types import SimpleNamespace
 
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+
 import src.features as lf
 import math
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
+
+import tensorflow.keras as keras
+from keras.models import Model
 
 def history_graph(history1 : dict, history2:dict =None) -> None :
     """
@@ -22,7 +27,7 @@ def history_graph(history1 : dict, history2:dict =None) -> None :
     ```
     """
     min = 0.6
-    def plot_accuracy(history, round_str):
+    def plot_accuracy(history:dict, round_str:str):
         plt.plot(history['main_categorical_accuracy'], label='Training Accuracy')
         plt.plot(history['val_main_categorical_accuracy'], label='Validation Accuracy')
         plt.legend(loc='lower right')
@@ -30,7 +35,7 @@ def history_graph(history1 : dict, history2:dict =None) -> None :
         plt.ylim([min, 1])
         plt.title(round_str + 'Training and Validation Accuracy')
 
-    def plot_loss(history, round_str):
+    def plot_loss(history:dict, round_str:str):
         plt.plot(history['main_loss'], label='Training Loss')
         plt.plot(history['val_main_loss'], label='Validation Loss')
         plt.legend(loc='upper right')
@@ -72,7 +77,7 @@ def plot_confusion_matrix(results:str,description:str="" ):
 
 
 
-def display_results(results,nb=15,gradcam=False, model=None, img_size=None):
+def display_results(results:pd.DataFrame,nb:int=15,gradcam:bool=False, model:Model=None, img_size:tuple=None):
     """
     Display the results of a classification model.
     Parameters:

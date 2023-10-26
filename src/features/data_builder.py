@@ -20,9 +20,9 @@ import src.models as lm
 
 
 # data_dir= 'sources/nonsegmentedv2/'
-data_dir = 'sources/v2-plant-seedlings-dataset/'
+data_dir:str = 'sources/v2-plant-seedlings-dataset/'
 
-random_state = 42
+random_state:int = 42
 
 
 class ImageDataWrapper() :
@@ -42,7 +42,7 @@ class ImageDataWrapper() :
     weights = None
 
 
-    def __init__(self, train, test, classes, nb_classes, weights) :
+    def __init__(self, train : pd.DataFrame, test: pd.DataFrame, classes: list, nb_classes:int, weights:dict) -> None:
         self.train = train
         self.test = test
         self.classes = classes
@@ -82,7 +82,7 @@ def create_dataset_from_directory (data_dir: str = data_dir,  train_size: float 
 
 
 
-def get_data_flows( image_data_wrapper: ImageDataWrapper, model_wrapper: lm.model_wrapper.ModelWrapper, batch_size: int , data_augmentation: dict, img_size : int) -> Tuple :
+def get_data_flows( image_data_wrapper: ImageDataWrapper, model_wrapper: lm.model_wrapper.ModelWrapper, batch_size: int , data_augmentation: dict, img_size : tuple) -> Tuple :
     """
     Generate data flows for training and testing a model.
 
@@ -106,7 +106,7 @@ def get_data_flows( image_data_wrapper: ImageDataWrapper, model_wrapper: lm.mode
     generator_param = dict(
         x_col="Images",
         y_col="Labels",
-        target_size=(img_size, img_size),
+        target_size=img_size,
         color_mode="rgb",
         class_mode="categorical",
         batch_size=batch_size,
@@ -171,7 +171,7 @@ def get_predictions_dataframe(model : Model, test_flow : DataFrameIterator , tes
     return result_df
 
 
-def readImage(path:str, size:int=None) -> np.ndarray:
+def readImage(path:str, size:tuple=None) -> np.ndarray:
     """
     Reads an image from the given path and performs some preprocessing steps.
     Parameters:
@@ -180,7 +180,7 @@ def readImage(path:str, size:int=None) -> np.ndarray:
         numpy.ndarray: The preprocessed image as a NumPy array.
     """
     if (size) :
-        img = load_img(path,color_mode='rgb',target_size=(size,size))
+        img = load_img(path,color_mode='rgb',target_size=size)
     else :
         img = load_img(path,color_mode='rgb')
     img = img_to_array(img)
@@ -222,7 +222,7 @@ def make_gradcam_heatmap(img_array: np.ndarray, model : Model) -> np.ndarray:
     return heatmap.numpy()
 
 
-def gradCAMImage(model : Model, img_path :str, img_size : int) -> np.ndarray:
+def gradCAMImage(model : Model, img_path :str, img_size : tuple) -> np.ndarray:
     """
     Generates a Grad-CAM image by overlaying the heatmap on the original image.
 
@@ -235,7 +235,7 @@ def gradCAMImage(model : Model, img_path :str, img_size : int) -> np.ndarray:
         The superimposed image with the heatmap.
     """
     path = f"{img_path}"
-    img = load_img(path, target_size=(img_size, img_size))
+    img = load_img(path, target_size=img_size)
     img = img_to_array(img)
     expended_img = np.expand_dims(img / 255, axis=0)
     heatmap = make_gradcam_heatmap(expended_img, model)

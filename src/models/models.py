@@ -23,8 +23,8 @@ class Trainer() :
     Trainers are classes making model init, training and estimation
     """
     # default parameters
-    record_dir = "../../models/records/"
-    img_size = 224 ## TODO change for tuple
+    record_dir:str = "../../models/records/"
+    img_size:tuple = (224,224)
     data_augmentation = dict(
         validation_split=0.12,
         rotation_range=360,
@@ -37,8 +37,13 @@ class Trainer() :
                                      patience=2, verbose=1),
     stop_callback = EarlyStopping(monitor='val_loss', patience=3,
                                   restore_best_weights=True, verbose=1)
-    epoch1=1
-    epoch2=1
+    epoch1:int=1
+    lr1:float=0.001
+    # used for 2 rounds fine tuning
+    epoch2:int=1
+    lr2:float=0.00001
+
+
     batch_size=32
 
     # other attributes that will be init by subclasses
@@ -56,7 +61,7 @@ class Trainer() :
     results= None
 
 
-    def serialize(self, timestamp_str=None):
+    def serialize(self, campain_id=None):
         """
         Serializes the model and history objects to disk.
 
@@ -68,7 +73,7 @@ class Trainer() :
         Returns:
             List[str]: A list of file paths containing the serialized model and history filenames.
         """
-        history1_file, history2_file, model_file = self.get_filename(timestamp_str)
+        history1_file, history2_file, model_file = self.get_filename(campain_id)
         self.model.save(model_file)
         with open(history1_file, 'wb') as f:
             pickle.dump(self.history1, f)
@@ -78,9 +83,9 @@ class Trainer() :
         return [model_file, history1_file, history2_file]
 
 
-    def get_filename(self, timestamp_str):
-        if (timestamp_str):
-            path = f"{self.record_dir}/{timestamp_str}/{self.record_name}"
+    def get_filename(self, campain_id):
+        if (campain_id):
+            path = f"{self.record_dir}/{campain_id}/{self.record_name}"
         else:
             path = f"{self.record_dir}/{self.record_name}"
         model_file = path + '_model.h5'
@@ -89,16 +94,16 @@ class Trainer() :
         return history1_file, history2_file, model_file
 
 
-    def deserialize(self, timestamp_str):
+    def deserialize(self, campaign_id):
         """
         Deserialize the model, history1, and history2 from the given timestamp string.
 
-        :param timestamp_str: The timestamp string representing the desired snapshot.
-        :type timestamp_str: str
+        :param campaign_id: The timestamp string representing the desired snapshot.
+        :type campaign_id: str
 
         :return: None
         """
-        history1_file, history2_file, model_file = self.get_filename(timestamp_str)
+        history1_file, history2_file, model_file = self.get_filename(campaign_id)
         self.model = keras.models.load_model(model_file)
         with open(history1_file, 'rb') as f:
             self.history1 = pickle.load(f)
@@ -114,13 +119,10 @@ class Trainer() :
         Returns:
             None
     """
-    def train(self, epochs:int):
-
-        # pretrained model is set not trainable
-        self.base_model.trainable = False
+    def compile_fit(self, lr:float, epochs:int):
 
         self.model.compile(
-            optimizer=Adam(),
+            optimizer=Adam(learning_rate=lr),
             loss=dict(main=CategoricalCrossentropy(), gradcam=None),
             metrics=dict(main=CategoricalAccuracy(), gradcam=None)
         )
@@ -152,38 +154,45 @@ class Trainer() :
 class Step1MobileNetv3(Trainer) :
     record_name = "step1_mobilenetv3"
     def __init__(self, data_wrapper):
-        self.model_wrapper = lm.model_wrapper.MobileNetv3(self.img_size)
         self.data_wrapper = data_wrapper
+
+        # set the base model
+        self.model_wrapper = lm.model_wrapper.MobileNetv3(self.img_size)
+        self.base_model = self.model_wrapper.model
 
         # build data flows
         self.train, self.validation, self.test = lf.data_builder.get_data_flows(self.data_wrapper, self.model_wrapper, self.batch_size, self.data_augmentation, self.img_size)
 
-
+        # encapsulation for facilating gradcam computation
         ##TODO virer gradcam
         gradcam_encapsulation = lm.model_wrapper.get_gradcam_encapsulation(self.model_wrapper)
-        base_model = self.model_wrapper.model
 
-        # build model
-        x, gradcam_output = gradcam_encapsulation(base_model.input, training=False)
+        # Model definition
+        x, gradcam_output = gradcam_encapsulation(self.base_model.input, training=False)
         x = Dense(128, activation='leaky_relu')(x)
         x = Dense(224, activation='leaky_relu')(x)
         output = Dense(12, activation='softmax', name='main')(x)
-        self.model = Model(inputs=base_model.input, outputs=[output, gradcam_output])
+        self.model = Model(inputs=self.base_model.input, outputs=[output, gradcam_output])
 
     """
-        Train the model and keep trace of history
-        The model can then be serialized
-        Parameters:
-            None
-        Returns:
-            None
+    Fit or load the model for training or inference.
+    Parameters:
+        campain_id (optional): The ID of the campaign to load or serialize.
+        training (bool): A flag indicating whether to perform training or inference.
+    Returns:
+        None
     """
-    def train(self):
-        print ('cxoucou')
-        self.base_model.trainable = False
-        super.train(self, epochs=self.epoch1)
+    def fit_or_load(self, campain_id=None, training=True):
+        if (training):
+            print (f">>> {self.record_name} –– Training ")
+            self.base_model.trainable = False
+            self.compile_fit(lr=self.lr1, epochs=self.epoch1)
 
-
+            print(f">>> {self.record_name} –– Serialize ")
+            self.serialize(campain_id=campain_id)
+        else :
+            print (f">>> {self.record_name} –– Loading ")
+            self.deserialize(campaign_id=campain_id)
 
 
 
