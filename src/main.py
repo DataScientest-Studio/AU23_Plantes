@@ -4,16 +4,13 @@ import src.models as lm
 import src.visualization as lv
 from src.models.models import *
 
-import sklearn
-
-
-# Data building
+#### Data building
 data_wrapper = lf.data_builder.create_dataset_from_directory('../data/v2-plant-seedlings-dataset/')
 
-
-# Train Campaigns
+#### Train Campaigns
 campaign_id='test'
 
+#### Stage 1
 stage1_mobilenet = Stage1MobileNetv3(data_wrapper)
 stage1_mobilenet.fit_or_load(campain_id=campaign_id, training=False)
 stage1_mobilenet.evaluate()
