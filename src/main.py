@@ -4,7 +4,7 @@ import src.models as lm
 import src.visualization as lv
 from src.models.models import *
 
-
+import sklearn
 
 
 # Data building
@@ -14,8 +14,13 @@ data_wrapper = lf.data_builder.create_dataset_from_directory('../data/v2-plant-s
 # Train Campaigns
 campaign_id='test'
 
-step1mobilenet = Step1MobileNetv3(data_wrapper)
-step1mobilenet.fit_or_load(campain_id=campaign_id, training=True)
-step1mobilenet.evaluate()
+stage1_mobilenet = Stage1MobileNetv3(data_wrapper)
+stage1_mobilenet.fit_or_load(campain_id=campaign_id, training=False)
+stage1_mobilenet.evaluate()
+stage1_mobilenet.print_classification_report()
+stage1_mobilenet.display_history_graphs()
+stage1_mobilenet.display_confusion_matrix()
+stage1_mobilenet.display_samples(nb=3)
+stage1_mobilenet.display_samples(nb=6, gradcam=True)
 
 
