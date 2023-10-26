@@ -15,6 +15,7 @@ data_wrapper = lf.data_builder.create_dataset_from_directory('../data/v2-plant-s
 campaign_id='test'
 
 step1mobilenet = Step1MobileNetv3(data_wrapper)
-step1mobilenet.fit_or_load(campain_id=campaign_id, training=False)
+step1mobilenet.fit_or_load(campain_id=campaign_id, training=True)
 step1mobilenet.evaluate()
+
 

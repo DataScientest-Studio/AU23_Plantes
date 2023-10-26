@@ -23,7 +23,7 @@ class Trainer() :
     Trainers are classes making model init, training and estimation
     """
     # default parameters
-    record_dir:str = "../../models/records/"
+    record_dir:str = "../models/records/"
     img_size:tuple = (224,224)
     data_augmentation = dict(
         validation_split=0.12,
