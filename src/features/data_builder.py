@@ -85,7 +85,7 @@ def create_dataset_from_directory (data_dir: str = data_dir,  train_size: float 
 
 
 
-def get_data_flows( image_data_wrapper: ImageDataWrapper, model_wrapper: lm.model_wrapper.ModelWrapper, batch_size: int , data_augmentation: dict, img_size : tuple) -> Tuple :
+def get_data_flows(image_data_wrapper: ImageDataWrapper, model_wrapper: lm.model_wrapper.BaseModelWrapper, batch_size: int, data_augmentation: dict, img_size : tuple) -> Tuple :
     """
     Generate data flows for training and testing a model.
 
@@ -195,14 +195,14 @@ def readImage(path:str, size:tuple=None) -> np.ndarray:
 
 
 
-def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model, base_model_wrapper : lm.model_wrapper.ModelWrapper) -> np.ndarray:
+def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model, base_model_wrapper : lm.model_wrapper.BaseModelWrapper) -> np.ndarray:
     """
     Generates a Grad-CAM heatmap for a given input image array using a model.
 
     Args:
         img_array (numpy.ndarray): The input image array.
         model (tensorflow.keras.Model): The model to generate the heatmap from.
-        base_model_wrapper (lm.model_wrapper.ModelWrapper): The associated base model wrapper.
+        base_model_wrapper (lm.model_wrapper.BaseModelWrapper): The associated base model wrapper.
 
     Returns:
         numpy.ndarray: The Grad-CAM heatmap.
@@ -221,7 +221,7 @@ def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model, base_mod
     return heatmap.numpy()
 
 
-def gradCAMImage(img_path :str, img_size : tuple, model : Model,  base_model_wrapper : lm.model_wrapper.ModelWrapper) -> np.ndarray:
+def gradCAMImage(img_path :str, img_size : tuple, model : Model, base_model_wrapper : lm.model_wrapper.BaseModelWrapper) -> np.ndarray:
     """
     Generates a Grad-CAM image by overlaying the heatmap on the original image.
 

@@ -26,7 +26,7 @@ import pickle
 RECORD_DIR: str = "../models/records"
 
 class Trainer():
-
+    #abstract class
     """
     Trainers are classes making model init, training and estimation
     """
@@ -56,16 +56,24 @@ class Trainer():
 
     # other attributes that will be init by subclasses
     record_name: str = None
-    model_wrapper: lm.model_wrapper.ModelWrapper = None
-    data_wrapper: lf.data_builder.ImageDataWrapper = None
+    base_model: lm.model_wrapper.BaseModelWrapper = None
+    model: Model = None
+    data: lf.data_builder.ImageDataWrapper = None
     train: DataFrameIterator = None
     validation: DataFrameIterator = None
     test: DataFrameIterator = None
-    base_model: Model = None
-    model: Model = None
     history1: dict = None
     history2: dict = None
     results: pd.DataFrame = None
+
+
+
+    def __init__(self, data_wrapper):
+        self.data = data_wrapper
+        # build data flows
+        self.train, self.validation, self.test = lf.data_builder.get_data_flows(self.data, self.base_model,
+                                                                                self.batch_size, self.data_augmentation,
+                                                                                self.img_size)
 
     def serialize(self, campain_id=None):
         """
@@ -119,6 +127,31 @@ class Trainer():
         print(f">>> {self.record_name} –– {step_name}")
 
 
+    def fit_or_load(self, campain_id=None, training=True):
+        """
+        Fit or load the model for training or inference.
+        Parameters:
+            campain_id (optional): The ID of the campaign to load or serialize.
+            training (bool): A flag indicating whether to perform training or inference.
+        Returns:
+            None
+        """
+        if (training):
+            self.print_step("Training")
+            self.process_training()
+            self.print_step("Serialize ")
+            self.serialize(campain_id=campain_id)
+        else:
+            self.print_step("Loading")
+            self.deserialize(campaign_id=campain_id)
+
+    def process_training(self):
+        """
+        implement the training sequence using compile_fit method
+        must be implemented by subclasses
+        """
+        raise NotImplementedError("process_training must be implemented")   
+
     def compile_fit(self, lr: float, epochs: int):
         """
                 Train the model and keep trace of history
@@ -139,12 +172,12 @@ class Trainer():
             validation_data=self.validation,
             epochs=epochs,
             batch_size=self.batch_size,
-            class_weight=self.data_wrapper.weights,
+            class_weight=self.data.weights,
             callbacks=[self.lr_reduction, self.stop_callback]
         ).history
 
 
-    def single_evaluation(self, path: str) -> str:
+    def single_prediction(self, path: str) -> str:
         """
         Evaluate the model on a single image.
         Parameters:
@@ -155,9 +188,9 @@ class Trainer():
         self.print_step("Evaluation")
         img = load_img(path, target_size=self.img_size)
         img = img_to_array(img)
-        img = self.model_wrapper.preprocessing(img)
+        img = self.base_model.preprocessing(img)
         pred_vector = self.model.predict(np.expand_dims(img, axis=0))
-        return self.data_wrapper.classes[np.argmax(pred_vector)]
+        return self.data.classes[np.argmax(pred_vector)]
 
 
     def evaluate(self) -> pd.DataFrame:
@@ -169,7 +202,7 @@ class Trainer():
             pd.DataFrame: The results dataframe
         """
         self.print_step("Evaluation")
-        self.results = lf.data_builder.get_predictions_dataframe(self.model, self.test, self.data_wrapper.test_df)
+        self.results = lf.data_builder.get_predictions_dataframe(self.model, self.test, self.data.test_df)
         return self.results
 
 
@@ -208,7 +241,7 @@ class Trainer():
         if (not include_true_pred and  include_false_pred): results = results[results['Same']==False]
         if gradcam :
             lv.graphs.display_results(results, nb=nb, record_name=self.record_name, gradcam=True, model=self.model,
-                                       base_model_wrapper=self.model_wrapper, img_size=self.img_size)
+                                      base_model_wrapper=self.base_model, img_size=self.img_size)
         else : lv.graphs.display_results(results, nb=nb, record_name=self.record_name)
 
     def display_confusion_matrix(self) -> None:
@@ -233,7 +266,7 @@ class Trainer():
 """"
 
 
-
+    
     Stage 1 : simple training (no fine tuning, no background removal, simple classification)
     comparison between the 2 selected models : Mobilnetv3 and Resnet
 
@@ -242,96 +275,33 @@ class Trainer():
 
 """
 
-class Stage1MobileNetv3(Trainer):
-    record_name = "Stage-1_MobileNetv3"
+class Stage1(Trainer):
+    # abstract class
+    record_name = "none"
 
     def __init__(self, data_wrapper):
-        self.data_wrapper = data_wrapper
-
-        # set the base model
-        self.model_wrapper = lm.model_wrapper.MobileNetv3(self.img_size)
-        self.base_model = self.model_wrapper.model
-
-        # build data flows
-        self.train, self.validation, self.test = lf.data_builder.get_data_flows(self.data_wrapper, self.model_wrapper,
-                                                                                self.batch_size, self.data_augmentation,
-                                                                                self.img_size)
+        super().__init__(data_wrapper)
 
         # Model definition
-        x = Dense(128, activation='leaky_relu')(self.base_model.output)
+        x = Dense(128, activation='leaky_relu')(self.base_model.model.output)
         x = Dense(224, activation='leaky_relu')(x)
         output = Dense(12, activation='softmax', name='main')(x)
-        self.model = Model(inputs=self.base_model.input, outputs=output)
+        self.model = Model(inputs=self.base_model.model.input, outputs=output)
 
 
 
-    def fit_or_load(self, campain_id=None, training=True):
-        """
-        Fit or load the model for training or inference.
-        Parameters:
-            campain_id (optional): The ID of the campaign to load or serialize.
-            training (bool): A flag indicating whether to perform training or inference.
-        Returns:
-            None
-        """
-        if (training):
-            self.print_step("Training")
-            self.base_model.trainable = False
-            self.compile_fit(lr=self.lr1, epochs=self.epoch1)
+    def process_training(self):
+        self.base_model.model.trainable = False
+        self.compile_fit(lr=self.lr1, epochs=self.epoch1)
 
-            self.print_step("Serialize ")
-            self.serialize(campain_id=campain_id)
-        else:
-            self.print_step("Loading")
-            self.deserialize(campaign_id=campain_id)
+class Stage1MobileNetv3(Stage1):
+     record_name = "Stage-1_MobileNetv3"
+
+     def __init__(self, data_wrapper):
+        # set the base model -- must be set before super().__init__()
+        self.base_model = lm.model_wrapper.MobileNetv3(self.img_size)
+        super().__init__(data_wrapper)
 
 
 
 
-class Stage1ResNetv3(Trainer):
-    record_name = "Stage-1_ResNet50v2"
-
-    def __init__(self, data_wrapper):
-        self.data_wrapper = data_wrapper
-
-        # set the base model
-        self.model_wrapper = lm.model_wrapper.ResNet50V2(self.img_size)
-        self.base_model = self.model_wrapper.model
-
-        # build data flows
-        self.train, self.validation, self.test = lf.data_builder.get_data_flows(self.data_wrapper, self.model_wrapper,
-                                                                                self.batch_size, self.data_augmentation,
-                                                                                self.img_size)
-
-        # encapsulation for facilating gradcam computation
-        ##TODO virer gradcam
-        gradcam_encapsulation = lm.model_wrapper.get_gradcam_encapsulation(self.model_wrapper)
-
-        # Model definition
-        x, gradcam_output = gradcam_encapsulation(self.base_model.input, training=False)
-        x = Dense(128, activation='leaky_relu')(x)
-        x = Dense(224, activation='leaky_relu')(x)
-        output = Dense(12, activation='softmax', name='main')(x)
-        self.model = Model(inputs=self.base_model.input, outputs=[output, gradcam_output])
-
-
-
-    def fit_or_load(self, campain_id=None, training=True):
-        """
-        Fit or load the model for training or inference.
-        Parameters:
-            campain_id (optional): The ID of the campaign to load or serialize.
-            training (bool): A flag indicating whether to perform training or inference.
-        Returns:
-            None
-        """
-        if (training):
-            self.print_step("Training")
-            self.base_model.trainable = False
-            self.compile_fit(lr=self.lr1, epochs=self.epoch1)
-
-            self.print_step("Serialize ")
-            self.serialize(campain_id=campain_id)
-        else:
-            self.print_step("Loading")
-            self.deserialize(campaign_id=campain_id)

@@ -1,13 +1,13 @@
 import tensorflow as tf
 from tensorflow import keras
-from keras import Model
+from keras import Model, Input
 
 
-class ModelWrapper :
+class BaseModelWrapper :
     """
-    A ModelWrapper hold a classification pretrained model  and its main caracteristics
-    All ModelWraper object must assign the variables :
-    img_size, preprocessing, log_name, model, grad_cam_layer
+    A BaseModelWrapper encapsulates a  pretrained base model  and its main characteristics
+    All BaseModelWraper object must assign the variables :
+    preprocessing, log_name, model, grad_cam_layer
     """
     preprocessing = None
     log_name:str= None
@@ -18,10 +18,18 @@ class ModelWrapper :
         pass
 
 
+class VoidBaseModel(BaseModelWrapper) :
+    def __init__(self, img_size:tuple) -> None:
+        self.preprocessing = lambda x : x
+        self.log_name = 'none'
+        inputs = Input(shape=(None,))
+        self.model = Model(inputs=inputs, outputs=inputs)
+        self.grad_cam_layer = None
+
+
 from keras.applications import mobilenet_v2
 from keras.applications import MobileNetV2
-class MobileNetv2(ModelWrapper) :
-
+class MobileNetv2(BaseModelWrapper) :
     def __init__(self, img_size:tuple) -> None:
         self.preprocessing = mobilenet_v2.preprocess_input
         self.log_name = 'mobilenetv2'
@@ -39,7 +47,7 @@ class MobileNetv2(ModelWrapper) :
 
 from keras.applications import mobilenet_v3
 from keras.applications import MobileNetV3Large
-class MobileNetv3(ModelWrapper):
+class MobileNetv3(BaseModelWrapper):
     def __init__(self, img_size:tuple) -> None:
         self.preprocessing = mobilenet_v3.preprocess_input
         self.log_name = 'mobilenetv3'
@@ -57,7 +65,7 @@ class MobileNetv3(ModelWrapper):
 
 from keras.applications import resnet_v2
 from keras.applications import ResNet50V2
-class ResNet50V2(ModelWrapper):
+class ResNet50V2(BaseModelWrapper):
     def __init__(self, img_size:tuple) -> None:
         self.preprocessing = resnet_v2.preprocess_input
         self.log_name = 'resnetv2'
@@ -75,7 +83,7 @@ class ResNet50V2(ModelWrapper):
 
 
 
-def get_gradcam_encapsulation(model_wrapper:ModelWrapper) -> Model:
+def get_gradcam_encapsulation(model_wrapper:BaseModelWrapper) -> Model:
     """
     Useful for GradCam computation while doing fine-tuning with the training=false argument
 

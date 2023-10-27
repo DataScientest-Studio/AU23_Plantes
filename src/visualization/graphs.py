@@ -94,7 +94,7 @@ def plot_confusion_matrix(results: str, record_name: str = ""):
     plt.show()
 
 
-def display_results(results: pd.DataFrame, nb: int = 15, gradcam: bool = False, model: Model = None, base_model_wrapper : lm.model_wrapper.ModelWrapper = None,
+def display_results(results: pd.DataFrame, nb: int = 15, gradcam: bool = False, model: Model = None, base_model_wrapper : lm.model_wrapper.BaseModelWrapper = None,
                     img_size: tuple = None, record_name: str = None):
     """
     Display the results of a classification model.
