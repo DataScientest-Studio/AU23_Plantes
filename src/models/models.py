@@ -23,13 +23,15 @@ import pickle
 
 """ Model training """
 
+RECORD_DIR: str = "../models/records"
 
 class Trainer():
+
     """
     Trainers are classes making model init, training and estimation
     """
     # default parameters
-    record_dir: str = "../models/records"
+
 
     img_size: tuple = (224, 224)
     data_augmentation = dict(
@@ -88,9 +90,9 @@ class Trainer():
 
     def get_filenames(self, campain_id):
         if (campain_id):
-            path = f"{self.record_dir}/{campain_id}/{self.record_name}"
+            path = f"{RECORD_DIR}/{campain_id}/{self.record_name}"
         else:
-            path = f"{self.record_dir}/{self.record_name}"
+            path = f"{RECORD_DIR}/{self.record_name}"
         model_file = path + '_model.h5'
         history1_file = path + '_history1.pkl'
         history2_file = path + '_history2.pkl'
@@ -151,7 +153,8 @@ class Trainer():
         img = load_img(path, target_size=self.img_size)
         img = img_to_array(img)
         img = self.model_wrapper.preprocessing(img)
-        return self.model.predict(np.expand_dims(img, axis=0))[0]
+        pred_vector = self.model.predict(np.expand_dims(img, axis=0))[0]
+        return self.data_wrapper.classes[np.argmax(pred_vector)]
 
 
     def evaluate(self) -> pd.DataFrame:
@@ -163,7 +166,7 @@ class Trainer():
             None
         """
         self.print_step("Evaluation")
-        self.results = lf.data_builder.get_predictions_dataframe(self.model, self.test, self.data_wrapper.test)
+        self.results = lf.data_builder.get_predictions_dataframe(self.model, self.test, self.data_wrapper.test_df)
         return self.results
 
 

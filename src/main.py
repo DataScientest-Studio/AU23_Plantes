@@ -3,6 +3,7 @@ import src.features as lf
 import src.models as lm
 import src.visualization as lv
 from src.models.models import *
+lm.models.RECORD_DIR='../models/records'
 
 #### Data building
 data_wrapper = lf.data_builder.create_dataset_from_directory('../data/v2-plant-seedlings-dataset/')

@@ -29,22 +29,25 @@ class ImageDataWrapper() :
     """
     Wrapper for encapsulating a splited image data frame and its characteritics
     it holds the following attributes
+        - data : the complete dataframe
         - train : the train dataset
         - test : the test dataset
         - classes : the list of classes
         - nb_classes : the number of classes
         - weights : the class weights
     """
-    train = None
-    test = None
+    dataframe = None
+    train_df = None
+    test_df = None
     classes = None
     nb_classes = None
     weights = None
 
 
-    def __init__(self, train : pd.DataFrame, test: pd.DataFrame, classes: list, nb_classes:int, weights:dict) -> None:
-        self.train = train
-        self.test = test
+    def __init__(self, dataframe: pd.DataFrame, train_df : pd.DataFrame, test_df: pd.DataFrame, classes: list, nb_classes:int, weights:dict) -> None:
+        self.dataframe = dataframe
+        self.train_df = train_df
+        self.test_df = test_df
         self.classes = classes
         self.nb_classes = nb_classes
         self.weights = weights
@@ -65,20 +68,20 @@ def create_dataset_from_directory (data_dir: str = data_dir,  train_size: float 
     images = list(dataset_path.glob(r'**/*.png'))
     labels = list(map(lambda x: x.parents[0].stem, images))
 
-    images = pd.Series(images, name="Images").astype(str)
-    labels = pd.Series(labels, name="Labels").astype(str)
+    images = pd.Series(images, name="path").astype(str)
+    labels = pd.Series(labels, name="label").astype(str)
 
     data = pd.concat([images, labels], axis=1)
 
     train_df, test_df = train_test_split(data, train_size=train_size, shuffle=shuffle, random_state=random_state)
-    classes = sorted(data.Labels.unique())
+    classes = sorted(data.label.unique())
     nb_classes = len(classes)
 
-    train_classes = train_df['Labels'].values
+    train_classes = train_df['label'].values
     class_weights = compute_class_weight(class_weight='balanced', classes=np.unique(train_classes), y=train_classes)
     weights = {i: w for i, w in enumerate(class_weights)}
 
-    return ImageDataWrapper(train=train_df, test=test_df, classes= classes, nb_classes=nb_classes, weights=weights)
+    return ImageDataWrapper(dataframe=data, train_df=train_df, test_df=test_df, classes= classes, nb_classes=nb_classes, weights=weights)
 
 
 
@@ -104,8 +107,8 @@ def get_data_flows( image_data_wrapper: ImageDataWrapper, model_wrapper: lm.mode
     )
 
     generator_param = dict(
-        x_col="Images",
-        y_col="Labels",
+        x_col="path",
+        y_col="label",
         target_size=img_size,
         color_mode="rgb",
         class_mode="categorical",
@@ -114,21 +117,21 @@ def get_data_flows( image_data_wrapper: ImageDataWrapper, model_wrapper: lm.mode
     )
 
     train = train_generator.flow_from_dataframe(
-        dataframe=image_data_wrapper.train,
+        dataframe=image_data_wrapper.train_df,
         shuffle=True,
         subset='training',
         **generator_param
     )
 
     validation = train_generator.flow_from_dataframe(
-        dataframe=image_data_wrapper.train,
+        dataframe=image_data_wrapper.train_df,
         shuffle=True,
         subset='validation',
         **generator_param
     )
 
     test = test_generator.flow_from_dataframe(
-        dataframe=image_data_wrapper.test,
+        dataframe=image_data_wrapper.test_df,
         shuffle=False,
         **generator_param
     )
@@ -158,8 +161,8 @@ def get_predictions_dataframe(model : Model, test_flow : DataFrameIterator , tes
     # generate a dataframe with the predicted and real labels
     result_df = test_df.copy()
     result_df = result_df.rename(columns={
-        'Images': 'filename',
-        'Labels': 'actual'
+        'path': 'filename',
+        'label': 'actual'
     })
     label_dict = dict((v, k) for k, v in test_flow.class_indices.items())
     result_df['predicted'] = [label_dict[i] for i in predictions]
@@ -199,7 +202,7 @@ def get_single_prediction(model: Model, img_path :str) -> np.ndarray:
 
 
 
-def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model, model_wrapper: lm.model_wrapper.ModelWrapper) -> np.ndarray:
+def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model) -> np.ndarray:
     """
     Generates a Grad-CAM heatmap for a given input image array using a model.
 
