@@ -76,7 +76,13 @@ def create_dataset_from_directory (data_dir: str = data_dir,  train_size: float 
 
     data = pd.concat([images, labels], axis=1)
 
-    #TODO remove bad images
+    # Remove bad images
+    index_to_drop = data[
+        ((data['label'] == 'Sugar beet') & (data['path'].str.endswith('97.png'))) |
+        ((data['label'] == 'Common Chickweed') & (data['path'].str.endswith('351.png'))) |
+        ((data['label'] == 'Loose Silky-bent') & (data['path'].str.endswith('304.png')))
+    ].index
+    data.drop(index_to_drop, inplace=True)
 
     train_df, test_df = train_test_split(data, train_size=train_size, shuffle=shuffle, random_state=random_state)
     classes = sorted(data.label.unique())
