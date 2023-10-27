@@ -323,7 +323,6 @@ class Stage1ResNetv2(Stage1):
 
 """
 
-
 class Stage2(Trainer):
     # abstract class
     record_name = "none"
@@ -339,7 +338,6 @@ class Stage2(Trainer):
         self.base_model.model.trainable = False
         self.compile_fit(lr=self.lr1, epochs=self.epoch1)
 
-
 class Stage2MobileNetv3(Stage1):
     record_name = "Stage-2_MobileNetv3"
 
@@ -351,7 +349,6 @@ class Stage2MobileNetv3(Stage1):
 
         self.base_model.preprocessing = preprocessing
         super().__init__(data_wrapper)
-
 
 class Stage2ResNetv2(Stage1):
     record_name = "Stage-2_ResNetv2"
