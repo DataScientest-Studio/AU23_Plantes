@@ -130,8 +130,8 @@ class Trainer():
         """
         self.model.compile(
             optimizer=Adam(learning_rate=lr),
-            loss=dict(main=CategoricalCrossentropy(), gradcam=None),
-            metrics=dict(main=CategoricalAccuracy(), gradcam=None)
+            loss=CategoricalCrossentropy(),
+            metrics=CategoricalAccuracy()
         )
 
         self.history1 = self.model.fit(
@@ -144,16 +144,19 @@ class Trainer():
         ).history
 
 
-    def single_evaluation(self, path: str) -> pd.DataFrame:
+    def single_evaluation(self, path: str) -> str:
         """
         Evaluate the model on a single image.
-        ## TODO test this function
+        Parameters:
+            path (str): The path to the image.
+        Returns:
+            str: The predicted class
         """
         self.print_step("Evaluation")
         img = load_img(path, target_size=self.img_size)
         img = img_to_array(img)
         img = self.model_wrapper.preprocessing(img)
-        pred_vector = self.model.predict(np.expand_dims(img, axis=0))[0]
+        pred_vector = self.model.predict(np.expand_dims(img, axis=0))
         return self.data_wrapper.classes[np.argmax(pred_vector)]
 
 
@@ -161,9 +164,9 @@ class Trainer():
         """
         Evaluate the model by getting predictions and storing them in the results attribute.
         Parameters:
-            None
+            None (it uses the test flow encapsultated by the Trainer
         Returns:
-            None
+            pd.DataFrame: The results dataframe
         """
         self.print_step("Evaluation")
         self.results = lf.data_builder.get_predictions_dataframe(self.model, self.test, self.data_wrapper.test_df)
@@ -204,7 +207,8 @@ class Trainer():
         if (include_true_pred and not include_false_pred): results = results[results['Same']==True]
         if (not include_true_pred and  include_false_pred): results = results[results['Same']==False]
         if gradcam :
-            lv.graphs.display_results(results, nb=nb, record_name=self.record_name, gradcam=True, model=self.model, img_size=self.img_size)
+            lv.graphs.display_results(results, nb=nb, record_name=self.record_name, gradcam=True, model=self.model,
+                                       base_model_wrapper=self.model_wrapper, img_size=self.img_size)
         else : lv.graphs.display_results(results, nb=nb, record_name=self.record_name)
 
     def display_confusion_matrix(self) -> None:
@@ -253,16 +257,11 @@ class Stage1MobileNetv3(Trainer):
                                                                                 self.batch_size, self.data_augmentation,
                                                                                 self.img_size)
 
-        # encapsulation for facilating gradcam computation
-        ##TODO virer gradcam
-        gradcam_encapsulation = lm.model_wrapper.get_gradcam_encapsulation(self.model_wrapper)
-
         # Model definition
-        x, gradcam_output = gradcam_encapsulation(self.base_model.input, training=False)
-        x = Dense(128, activation='leaky_relu')(x)
+        x = Dense(128, activation='leaky_relu')(self.base_model.output)
         x = Dense(224, activation='leaky_relu')(x)
         output = Dense(12, activation='softmax', name='main')(x)
-        self.model = Model(inputs=self.base_model.input, outputs=[output, gradcam_output])
+        self.model = Model(inputs=self.base_model.input, outputs=output)
 
 
 

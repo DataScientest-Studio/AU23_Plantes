@@ -114,6 +114,7 @@ def get_data_flows( image_data_wrapper: ImageDataWrapper, model_wrapper: lm.mode
         class_mode="categorical",
         batch_size=batch_size,
         seed=random_state,
+        verbose=False,
     )
 
     train = train_generator.flow_from_dataframe(
@@ -157,7 +158,7 @@ def get_predictions_dataframe(model : Model, test_flow : DataFrameIterator , tes
     Returns:
         DataFrame: A dataframe containing the predicted and actual labels, as well as a column indicating whether they are the same.
     """
-    predictions = np.argmax(model.predict(test_flow)[0], axis=1)
+    predictions = np.argmax(model.predict(test_flow), axis=1)
     # generate a dataframe with the predicted and real labels
     result_df = test_df.copy()
     result_df = result_df.rename(columns={
@@ -192,31 +193,24 @@ def readImage(path:str, size:tuple=None) -> np.ndarray:
 
 
 
-def get_single_prediction(model: Model, img_path :str) -> np.ndarray:
-    """
-    Gets a prediction for an image with the given model.
-    """
-    img = readImage(img_path)
-    return model.predict(np.expand_dims(img, axis=0))[0]
 
 
-
-
-def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model) -> np.ndarray:
+def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model, base_model_wrapper : lm.model_wrapper.ModelWrapper) -> np.ndarray:
     """
     Generates a Grad-CAM heatmap for a given input image array using a model.
 
     Args:
         img_array (numpy.ndarray): The input image array.
         model (tensorflow.keras.Model): The model to generate the heatmap from.
+        base_model_wrapper (lm.model_wrapper.ModelWrapper): The associated base model wrapper.
 
     Returns:
         numpy.ndarray: The Grad-CAM heatmap.
     """
     with tf.GradientTape() as tape:
-        #TODO ajouter la couche de preprocessing ..
-
-        preds, last_conv_layer_output = complete_model(img_array)
+        img_array = base_model_wrapper.preprocessing(img_array)
+        grad_model = Model(complete_model.input, [complete_model.output, complete_model.get_layer(base_model_wrapper.grad_cam_layer).output])
+        preds, last_conv_layer_output = grad_model(img_array)
         pred_index = tf.argmax(preds[0])
         class_channel = preds[:, pred_index]
     grads = tape.gradient(class_channel, last_conv_layer_output)
@@ -227,14 +221,15 @@ def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model) -> np.nd
     return heatmap.numpy()
 
 
-def gradCAMImage(model : Model, img_path :str, img_size : tuple) -> np.ndarray:
+def gradCAMImage(img_path :str, img_size : tuple, model : Model,  base_model_wrapper : lm.model_wrapper.ModelWrapper) -> np.ndarray:
     """
     Generates a Grad-CAM image by overlaying the heatmap on the original image.
 
     Args:
-        model: The neural network model used for generating the heatmap.
         img_path: The path to the input image.
         img_size: The desired size of the input image.
+        model: The neural network model used for generating the heatmap.
+        base_model_wrapper: The associated base model wrapper.
 
     Returns:
         The superimposed image with the heatmap.
@@ -243,7 +238,7 @@ def gradCAMImage(model : Model, img_path :str, img_size : tuple) -> np.ndarray:
     img = load_img(path, target_size=img_size)
     img = img_to_array(img)
     expended_img = np.expand_dims(img / 255, axis=0)
-    heatmap = make_gradcam_heatmap(expended_img, model)
+    heatmap = make_gradcam_heatmap(expended_img, model, base_model_wrapper)
     heatmap = np.uint8(255 * heatmap)
 
     # Use jet colormap to colorize heatmap

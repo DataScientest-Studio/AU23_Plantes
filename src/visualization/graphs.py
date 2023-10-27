@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 import src.features as lf
+import src.models as lm
+
 import math
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
@@ -92,7 +94,7 @@ def plot_confusion_matrix(results: str, record_name: str = ""):
     plt.show()
 
 
-def display_results(results: pd.DataFrame, nb: int = 15, gradcam: bool = False, model: Model = None,
+def display_results(results: pd.DataFrame, nb: int = 15, gradcam: bool = False, model: Model = None, base_model_wrapper : lm.model_wrapper.ModelWrapper = None,
                     img_size: tuple = None, record_name: str = None):
     """
     Display the results of a classification model.
@@ -102,6 +104,7 @@ def display_results(results: pd.DataFrame, nb: int = 15, gradcam: bool = False, 
     - nb (int): The number of results to display. Default is 15.
     - gradcam (bool): Whether to show GradCAM layer or not. Default is False.
     - model (object): The classification model. Required if `gradcam` is True.
+    - base_model_wrapper (lm.model_wrapper.ModelWrapper): The associated base model wrapper. Required if `gradcam` is True.
     - img_size (tuple): The size of the image. Required if `gradcam` is True.
     - record_name (str): The name of the record. Default is None
     Returns:
@@ -115,7 +118,7 @@ def display_results(results: pd.DataFrame, nb: int = 15, gradcam: bool = False, 
         plt.subplot(math.ceil(16 / 3), 3, n)
         plt.subplots_adjust(hspace=0.5, wspace=0.3)
         if gradcam:
-            image = lf.data_builder.gradCAMImage(model, f"{results_df.filename[i]}", img_size)
+            image = lf.data_builder.gradCAMImage(f"{results_df.filename[i]}", img_size, model, base_model_wrapper )
         else:
             image = lf.data_builder.readImage(f"{results_df.filename[i]}")
         plt.imshow(image)
