@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/Users/morph/Desktop/Projet_DS/AU23_Plantes")
+
 from sklearn.metrics import classification_report
 
 import src.models as lm

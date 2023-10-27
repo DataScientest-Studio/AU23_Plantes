@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/Users/morph/Desktop/Projet_DS/AU23_Plantes")
+
 from types import SimpleNamespace
 
 import numpy as np

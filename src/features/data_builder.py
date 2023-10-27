@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/Users/morph/Desktop/Projet_DS/AU23_Plantes")
+
 from typing import Tuple
 
 import pandas as pd
@@ -20,7 +23,7 @@ import src.models as lm
 
 
 # data_dir= 'sources/nonsegmentedv2/'
-data_dir:str = 'sources/v2-plant-seedlings-dataset/'
+data_dir:str = '/Users/morph/Desktop/Projet_DS/dataset'
 
 random_state:int = 42
 
