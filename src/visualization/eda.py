@@ -109,7 +109,7 @@ def plot_class_distribution(class_distribution, total_images):
     bars = ax.bar(sorted_classes.keys(), sorted_classes.values(), color=summer_cmap(colors))
     ax.set_xticks(range(n_classes))
     ax.set_xticklabels(sorted_classes.keys(), rotation=90)
-    ax.set_ylabel("Nombre d'images")
+    ax.set_ylabel("Number of images")
 
     for bar, value in zip(bars, sorted_classes.values()):
         percentage = f"{(value / total_images) * 100:.2f}%"
@@ -200,7 +200,7 @@ def plot_image_ratio(data):
     ratio = data['Height'] / data['Width']
     plt.figure(figsize=(6, 6))
     plt.hist(ratio, bins=20, color='green', edgecolor='black')
-    plt.title('Distribution du ratio des Images')
+    plt.title('Distribution of the Images ratio')
     plt.xlabel('Ratio (Height/Width)')
     plt.ylabel('Number of images')
     plt.show()
