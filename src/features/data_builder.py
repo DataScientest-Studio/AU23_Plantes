@@ -73,6 +73,8 @@ def create_dataset_from_directory (data_dir: str = data_dir,  train_size: float 
 
     data = pd.concat([images, labels], axis=1)
 
+    #TODO remove bad images
+
     train_df, test_df = train_test_split(data, train_size=train_size, shuffle=shuffle, random_state=random_state)
     classes = sorted(data.label.unique())
     nb_classes = len(classes)
