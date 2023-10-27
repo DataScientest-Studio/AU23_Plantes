@@ -10,8 +10,8 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 
-from keras.layers import Dense, AveragePooling2D, Dropout
-from keras import Model
+from keras.layers import Dense, AveragePooling2D, Dropout, GlobalAveragePooling2D
+from keras import Model, Input, Sequential
 from keras.optimizers import Adam
 from keras.losses import CategoricalCrossentropy, SparseCategoricalCrossentropy, Hinge
 from keras.metrics import CategoricalAccuracy
@@ -281,18 +281,16 @@ class Stage1(Trainer):
 
     def __init__(self, data_wrapper):
         super().__init__(data_wrapper)
-
-        # Model definition
-        x = Dense(128, activation='leaky_relu')(self.base_model.model.output)
-        x = Dense(224, activation='leaky_relu')(x)
+        x = self.base_model.model.output
+        x = Dropout(0.2)(x)
         output = Dense(12, activation='softmax', name='main')(x)
         self.model = Model(inputs=self.base_model.model.input, outputs=output)
 
-
-
     def process_training(self):
-        self.base_model.model.trainable = False
-        self.compile_fit(lr=self.lr1, epochs=self.epoch1)
+            self.base_model.model.trainable = False
+            self.compile_fit(lr=self.lr1, epochs=self.epoch1)
+
+
 
 class Stage1MobileNetv3(Stage1):
      record_name = "Stage-1_MobileNetv3"
@@ -302,6 +300,75 @@ class Stage1MobileNetv3(Stage1):
         self.base_model = lm.model_wrapper.MobileNetv3(self.img_size)
         super().__init__(data_wrapper)
 
+
+class Stage1ResNetv2(Stage1):
+    record_name = "Stage-1_ResNetv2"
+
+    def __init__(self, data_wrapper):
+        # set the base model -- must be set before super().__init__()
+        self.base_model = lm.model_wrapper.ResNet50V2(self.img_size)
+        super().__init__(data_wrapper)
+
+
+""""
+
+
+
+    Stage 2 : simple training (no fine tuning, simple classification)
+    with background removal
+    comparison between the 2 selected models : Mobilnetv3 and Resnet
+
+
+
+
+"""
+
+
+class Stage2(Trainer):
+    # abstract class
+    record_name = "none"
+
+    def __init__(self, data_wrapper):
+        super().__init__(data_wrapper)
+        x = self.base_model.model.output
+        x = Dropout(0.2)(x)
+        output = Dense(12, activation='softmax', name='main')(x)
+        self.model = Model(inputs=self.base_model.model.input, outputs=output)
+
+    def process_training(self):
+        self.base_model.model.trainable = False
+        self.compile_fit(lr=self.lr1, epochs=self.epoch1)
+
+
+class Stage2MobileNetv3(Stage1):
+    record_name = "Stage-2_MobileNetv3"
+
+    def __init__(self, data_wrapper):
+        # set the base model -- must be set before super().__init__()
+        self.base_model = lm.model_wrapper.MobileNetv3(self.img_size)
+        def preprocessing(x):
+            return self.base_model.preprocessing(remove_background(x))
+
+        self.base_model.preprocessing = preprocessing
+        super().__init__(data_wrapper)
+
+
+class Stage2ResNetv2(Stage1):
+    record_name = "Stage-2_ResNetv2"
+
+    def __init__(self, data_wrapper):
+        # set the base model -- must be set before super().__init__()
+        self.base_model = lm.model_wrapper.ResNet50V2(self.img_size)
+        def preprocessing(x):
+            return self.base_model.preprocessing(remove_background(x))
+
+        self.base_model.preprocessing= preprocessing
+        super().__init__(data_wrapper)
+
+
+def remove_background(x):
+    ##TODO
+    return x
 
 
 

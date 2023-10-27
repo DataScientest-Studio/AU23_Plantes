@@ -85,12 +85,12 @@ def create_dataset_from_directory (data_dir: str = data_dir,  train_size: float 
 
 
 
-def get_data_flows(image_data_wrapper: ImageDataWrapper, model_wrapper: lm.model_wrapper.BaseModelWrapper, batch_size: int, data_augmentation: dict, img_size : tuple) -> Tuple :
+def get_data_flows(image_data_wrapper: ImageDataWrapper, base_model: lm.model_wrapper.BaseModelWrapper, batch_size: int, data_augmentation: dict, img_size : tuple) -> Tuple :
     """
     Generate data flows for training and testing a model.
 
     Parameters:
-        model_wrapper (ModelWrapper): An instance of the ModelWrapper class.
+        base_model (ModelWrapper): An instance of the ModelWrapper class.
         parameters (dict): A dictionary containing various parameters for data generation.
         image_data_wrapper (ImageDataWrapper): A DataFrame containing the training data.
 
@@ -98,12 +98,12 @@ def get_data_flows(image_data_wrapper: ImageDataWrapper, model_wrapper: lm.model
         A tuple with the train, validation, and test data generators.
     """
     train_generator = ImageDataGenerator(
-        preprocessing_function=model_wrapper.preprocessing,
+        preprocessing_function=base_model.preprocessing,
         **data_augmentation,
     )
 
     test_generator = ImageDataGenerator(
-        preprocessing_function=model_wrapper.preprocessing,
+        preprocessing_function=base_model.preprocessing,
     )
 
     generator_param = dict(
@@ -207,9 +207,14 @@ def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model, base_mod
     Returns:
         numpy.ndarray: The Grad-CAM heatmap.
     """
+    def get_last_conv_layer_name(model):
+        for layer in reversed(model.layers):
+            if 'conv' in layer.name:
+                return layer
+        raise ValueError("Couche non trouvée")
     with tf.GradientTape() as tape:
         img_array = base_model_wrapper.preprocessing(img_array)
-        grad_model = Model(complete_model.input, [complete_model.output, complete_model.get_layer(base_model_wrapper.grad_cam_layer).output])
+        grad_model = Model(complete_model.input, [complete_model.output, get_last_conv_layer_name(complete_model).output])
         preds, last_conv_layer_output = grad_model(img_array)
         pred_index = tf.argmax(preds[0])
         class_channel = preds[:, pred_index]

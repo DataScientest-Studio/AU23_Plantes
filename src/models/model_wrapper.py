@@ -1,4 +1,5 @@
 import tensorflow as tf
+
 from tensorflow import keras
 from keras import Model, Input
 
@@ -63,16 +64,15 @@ class MobileNetv3(BaseModelWrapper):
 
 
 
-from keras.applications import resnet_v2
-from keras.applications import ResNet50V2
+
+
 class ResNet50V2(BaseModelWrapper):
     def __init__(self, img_size:tuple) -> None:
-        self.preprocessing = resnet_v2.preprocess_input
+        self.preprocessing = tf.keras.applications.resnet50.preprocess_input
         self.log_name = 'resnetv2'
-        self.model = ResNet50V2(
+        self.model = tf.keras.applications.ResNet50(
                 input_shape=img_size + (3,),
                 include_top=False,
-                alpha=1.0,
                 weights='imagenet',
                 pooling='avg'
         )
