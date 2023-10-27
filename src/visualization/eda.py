@@ -6,7 +6,7 @@ import numpy as np
 import random
 
 def load_and_preprocess_data(base_path):
-    classes = [d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d)) and d != '.DS_Store']
+    classes = [d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d)) and d not in ['.DS_Store', '.ipynb_checkpoints']]
     image_paths = {}
     image_shapes = {}
     class_distribution = {}
