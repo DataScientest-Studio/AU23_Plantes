@@ -384,7 +384,7 @@ def RGB2LAB_SPACE(image : np.ndarray):
 class ImageProcess:
     def __init__(self, 
                 images      : tuple[np.ndarray, np.ndarray], 
-                threshold   : list[int, int]  = [10, 50], 
+                threshold   : list[int, int]  = [0, 80], 
                 radius      : float = 2.,
                 method      : str   = 'numpy',
                 color       : str   = 'white'
@@ -479,7 +479,7 @@ class ImageProcess:
     
 class FinalProcess:
     def __init__(self, 
-                threshold   : list[int, int]  = [10, 50], 
+                threshold   : list[int, int]  = [0, 80], 
                 radius      : float = 2.,
                 method      : str   = 'numpy',
                 color       : str   = 'white'
@@ -513,10 +513,107 @@ class FinalProcess:
 
         return self.x
 
-def remove_background(x : any, color: str='white'):
-    x = FinalProcess(color=color, radius=0.7).imgSegmentation(x=x)
+def remove_background(
+        x           : any, 
+        color       : str='white', 
+        radius      : float=4.,
+        threshold   : list[int, int]=[0, 80]
+        ) -> any:
+    
+    x = FinalProcess(
+        threshold   =threshold,
+        color       =color, 
+        radius      =radius
+        ).imgSegmentation(x=x)
     
     return x
 
+def Plot_Histograms(
+    data            : pd.DataFrame, 
+    figsize         : tuple  = (15, 4),  
+    mul             : float  = 1.0,
+    select_index    : list   = [0],
+    ylabel          : str    = "Intensity (Px)",
+    bins            : int    = 20,
+    rwidth          : float  = 0.2,
+    share_x         : bool   = True,
+    share_y         : bool   = False
+    ):
 
+    """
+    * ----------------------------------------------------------
+
+    arg:
+        * data is a dataframe with the path of all images
+        * figsize is a tuple used to create figures 
+        * color_indexes is a list of size 3 used to set color in each plot
+        * mul is numeric value
+        * names is a list that contains the names of speces len(names) = n 
+        * select_index is a list of values 
+        * bins is an integer  
+        * rwidth is the size of bins 
+    return:
+        None
+
+    * ----------------------------------------------------------
+    
+    >>> filter_selection(data=data, fisize = (8, 8))
+    
+    """
+    import matplotlib.pyplot as plt 
+
+    img     = [RGB2LAB_SPACE(image=plt.imread(data.dataframe.iloc[m].path).astype("float32")) for m in select_index]
+    names   = [data.dataframe.label[m] for m in select_index]
+
+    # canaux 
+    canaux = ["Luninosity", "Luninosity", "Luninosity"]
+    error = None
+    # uploading all python colors
+    colors = ['darkred', "darkgreen", "darkblue"]
+  
+    # plotting image in function of the channel
+    lenght = len(select_index)
+    
+    if   lenght > 1  : fig, axes = plt.subplots(lenght, 3, figsize=figsize, sharey=share_y, sharex=share_x)
+    elif lenght == 1 : fig, axes = plt.subplots(lenght, 3, figsize=figsize, sharey=share_y, sharex=share_x) 
+    else: error = True  
+
+    if error is None:
+        if lenght > 1:
+            for i in range(lenght): 
+                index =  i
+                channel = img[index].shape[-1]
+
+                for j in range(channel):
+                    axes[i, j].hist(img[index][:, :, j].ravel() * mul, bins=bins, color=colors[j], histtype="bar", 
+                                    rwidth=rwidth ,density=False)
+                    # title of image
+                    if i == 0: axes[i, j].set_title(f"Channel {j}", fontsize="small", weight="bold", color=colors[j])
+                    # set xlabel
+                    if i == lenght-1 :axes[i, j].set_xlabel(canaux[j], weight="bold", fontsize='small', color=colors[j])
+                    # set ylabel
+                    axes[i, j].set_ylabel(ylabel, weight="bold", fontsize='small', color=colors[j])
+                    # set lelend 
+                    axes[i, j].legend(labels = [names[i]], fontsize='small', loc="best")
+                    axes[i, j].ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+                else: pass
+            else: pass
+        else:
+            for i in select_index:
+                channel = img[i].shape[-1]
+                for j in range(channel):
+                    axes[j].hist( img[i][:, :, j].ravel(), bins=bins, color=colors[j], histtype="bar", 
+                                    rwidth=rwidth ,density=False)
+
+                    # set ylabel
+                    axes[j].set_ylabel(ylabel, weight="bold", fontsize='small', color=colors[j])
+                    # set title 
+                    axes[j].set_title(f"Channel {j}", fontsize="small", weight="bold", color=colors[j])
+                    # set xlabel 
+                    axes[j].set_xlabel(canaux[j], weight="bold",fontsize='small',color=colors[j])
+                    # set legend 
+                    axes[j].legend(labels = [names[i]], fontsize='small', loc="best")
+                    axes[i, j].ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+        plt.show()
+    else: pass
 
