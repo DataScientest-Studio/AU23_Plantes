@@ -365,9 +365,157 @@ class Stage2ResNetv2(Stage1):
         self.base_model.preprocessing= preprocessing
         super().__init__(data_wrapper)
 
+def RGB2LAB_SPACE(image : np.ndarray):
 
-def remove_background(x):
-    ##TODO
+    """
+    args:
+        image : image.shape = (m,m, 3)
+    return:
+        filter : filter.shape = image.shape 
+    """
+    import cv2
+    filter  = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    filter[:, :, 0] = cv2.normalize(filter[:, :, 0], None, 0, 1, cv2.NORM_MINMAX)
+    filter[:, :, 1] = cv2.normalize(filter[:, :, 1], None, 0, 1, cv2.NORM_MINMAX)
+    filter[:, :, 2] = cv2.normalize(filter[:, :, 2], None, 0, 1, cv2.NORM_MINMAX)
+
+    return filter
+
+class ImageProcess:
+    def __init__(self, 
+                images      : tuple[np.ndarray, np.ndarray], 
+                threshold   : list[int, int]  = [10, 50], 
+                radius      : float = 2.,
+                method      : str   = 'numpy',
+                color       : str   = 'white'
+                ) -> None   :
+        
+        self.images     = images
+        self.threshold  = threshold
+        self.radius     = radius
+        self.method     = method
+        self.color      = color
+        
+    def getMask(self,) -> np.ndarray:
+
+        """
+        arg:
+            None
+        return:
+            filter : np.ndarray
+        *--------------------------------------------------------------------------------------------------
+
+        >>> img = np.random.randn(160, 160, 3)
+        >>> mask = getMask(img = img, threshold=[10, 50], radius=2, method='numpy')
+        >>> mask = getMask(img = img, threshold=[10, 50], radius=2, method='where')
+
+        """
+        
+        from skimage.morphology import closing
+        from skimage.morphology import disk  
+
+        # numpy method
+        if self.method == "numpy": 
+            self.filter = ( self.images[1][..., 1] > self.threshold[0] / 255. ) &\
+                    ( self.images[1][..., 1] < self.threshold[1] / 255. ) 
+        # where method
+        else: 
+            self.filter = np.where( ( self.images[1][..., 1] > self.threshold[0] /255.  ) &\
+                    ( self.images[1][..., 1] < self.threshold[1] /255. ), 1, 0)
+
+        # create a disk
+        self.DISK = disk(self.radius)
+   
+        # create filter by comparing the values close to S or inside the disk
+        self.filter = closing(self.filter, self.DISK)
+         
+        # returning values
+        return self.filter
+    
+    def BackgroundColor(self, 
+                img : np.ndarray, 
+                upper_color : list[int, int, int], 
+                lower_color : list[int, int, int],
+                value       : list[float, float, float] = [1., 1., 1.]
+                ) -> np.ndarray :
+        import cv2
+
+        shape       = img.shape
+       
+        upper_color = np.array(upper_color).reshape((shape[-1], )) / 255.
+        lower_color = np.array(lower_color).reshape((shape[-1], )) / 255.
+
+        try:
+            mask = cv2.inRange(src=img, lowerb=lower_color, upperb=upper_color)
+            img[mask > 0] = value
+            return  img
+        except TypeError: return None 
+
+    def Segmentation(self,
+                    upper_color : list[int, int, int], 
+                    lower_color : list[int, int, int],
+                    value       : list[float, float, float] = [1., 1., 1.]
+                    ) -> np.ndarray :
+        
+        self.img_seg     = self.images[0]
+        self.shape       = self.images[0].shape
+
+        self.mask        = ImageProcess(self.images, self.threshold, self.radius, self.method, self.color).getMask()
+        self.mask        = self.mask * 1.
+
+        self.img_seg[..., 0] = self.img_seg[..., 0] * self.mask * 1.
+        self.img_seg[..., 1] = self.img_seg[..., 1] * self.mask * 1.
+        self.img_seg[..., 2] = self.img_seg[..., 2] * self.mask * 1.
+
+        if self.color == 'white':
+            self.new_img = self.img_seg .reshape(self.shape[0], self.shape[1], 3)
+            self.new_img = ImageProcess(
+                    self.images, self.threshold, self.radius, self.method, self.color
+                            ).BackgroundColor(img=self.new_img, lower_color=lower_color, 
+                                              upper_color=upper_color, value=value)
+        else:  self.new_img = self.img_seg 
+            
+        return self.new_img
+    
+class FinalProcess:
+    def __init__(self, 
+                threshold   : list[int, int]  = [10, 50], 
+                radius      : float = 2.,
+                method      : str   = 'numpy',
+                color       : str   = 'white'
+                ) -> None   :
+        
+        self.threshold  = threshold
+        self.radius     = radius
+        self.method     = method
+        self.color      = color
+        
+    def imgSegmentation(self,
+            x           : any,
+            upper_color : list[int, int, int] = [30, 30, 30],  
+            lower_color : list[int, int, int] = [0, 0, 0],
+            value       : list[float, float, float] = [1., 1., 1.]):
+        
+        import tensorflow as tf 
+
+        self.shape = x.shape
+        self.dtype = x.dtype
+  
+        self.image          = x.numpy().astype('float32')
+        self.image_lab      = RGB2LAB_SPACE(image=self.image.copy())
+        self.images         = (self.image, self.image_lab)
+
+        self.image          = ImageProcess(self.images, self.threshold, 
+                                    self.radius, self.method, self.color).\
+                                        Segmentation(upper_color, lower_color, value)
+
+        self.x = tf.constant(self.image, dtype=self.dtype, shape=self.shape)
+
+        return self.x
+
+def remove_background(x : any, color: str='white'):
+    x = FinalProcess(color=color, radius=0.7).imgSegmentation(x=x)
+    
     return x
 
 
