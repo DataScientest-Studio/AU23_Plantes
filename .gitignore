@@ -6,7 +6,6 @@ __pycache__/
 # C extensions
 *.so
 
-/dataset
 # Distribution / packaging
 .Python
 build/
@@ -169,3 +168,4 @@ data/
 # test model records
 models/records/test*
 models/records/temp*
+/dataset
