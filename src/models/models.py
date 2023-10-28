@@ -310,15 +310,11 @@ class Stage1ResNetv2(Stage1):
         super().__init__(data_wrapper)
 
 
-""""
-
-
+"""
 
     Stage 2 : simple training (no fine tuning, simple classification)
     with background removal
     comparison between the 2 selected models : Mobilnetv3 and Resnet
-
-
 
 
 """
@@ -366,11 +362,13 @@ def RGB2LAB_SPACE(image : np.ndarray):
 
     """
     args:
-        image : image.shape = (m,m, 3)
+        image : image.shape = (m, m, 3)
     return:
         filter : filter.shape = image.shape 
     """
+
     import cv2
+
     filter  = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     filter[:, :, 0] = cv2.normalize(filter[:, :, 0], None, 0, 1, cv2.NORM_MINMAX)
     filter[:, :, 1] = cv2.normalize(filter[:, :, 1], None, 0, 1, cv2.NORM_MINMAX)
@@ -400,12 +398,6 @@ class ImageProcess:
             None
         return:
             filter : np.ndarray
-        *--------------------------------------------------------------------------------------------------
-
-        >>> img = np.random.randn(160, 160, 3)
-        >>> mask = getMask(img = img, threshold=[10, 50], radius=2, method='numpy')
-        >>> mask = getMask(img = img, threshold=[10, 50], radius=2, method='where')
-
         """
         
         from skimage.morphology import closing
@@ -423,7 +415,7 @@ class ImageProcess:
         # create a disk
         self.DISK = disk(self.radius)
    
-        # create filter by comparing the values close to S or inside the disk
+        # create filter by comparing the values close to DISK or inside the disk
         self.filter = closing(self.filter, self.DISK)
          
         # returning values
@@ -435,16 +427,34 @@ class ImageProcess:
                 lower_color : list[int, int, int],
                 value       : list[float, float, float] = [1., 1., 1.]
                 ) -> np.ndarray :
+        
+        """
+        arg:
+            (img, upper_color, lower_color, value)
+            * img is np.ndarray type of (m, m, c) here c is the channel and m is the image size
+            * upper_color is a list of value used t0 fix the maximum along (r, g, b)
+            * lower_color is a list of value used to fix the minimum along (r, g, b)
+            * values is a list of normalized pixels used to change the background 
+
+        return:
+            None or np.ndarray
+        """
+
         import cv2
 
+        # image shape
         shape       = img.shape
-       
+        #Normalizing lower and upper color and reshaping them in shape[-1]
+        # this means that if img.shape = (m, m, 3) -->  upper_color.shape = (3, ) 
+        # we have to do it because we have 3 channels in this case 
         upper_color = np.array(upper_color).reshape((shape[-1], )) / 255.
         lower_color = np.array(lower_color).reshape((shape[-1], )) / 255.
 
         try:
             mask = cv2.inRange(src=img, lowerb=lower_color, upperb=upper_color)
             img[mask > 0] = value
+
+            # returning the value 
             return  img
         except TypeError: return None 
 
@@ -454,32 +464,58 @@ class ImageProcess:
                     value       : list[float, float, float] = [1., 1., 1.]
                     ) -> np.ndarray :
         
+        """
+        arg:
+            (upper_color, lower_color, value)
+            * upper_color is a list of value used t0 fix the maximum along (r, g, b)
+            * lower_color is a list of value used to fix the minimum along (r, g, b)
+            * values is a list of normalized pixels used to change the background 
+
+        return:
+            None or np.ndarray
+        """
+
+        # original image 
         self.img_seg     = self.images[0]
+        # original image shape 
         self.shape       = self.images[0].shape
 
+        # creating mask from image_lab
         self.mask        = ImageProcess(self.images, self.threshold, self.radius, self.method, self.color).getMask()
+        # converting mask in a float type
         self.mask        = self.mask * 1.
 
+        #################################################
+        ########### segmentation section  ###############
+        #################################################
+        # applying mask of the orginal image
         self.img_seg[..., 0] = self.img_seg[..., 0] * self.mask * 1.
         self.img_seg[..., 1] = self.img_seg[..., 1] * self.mask * 1.
         self.img_seg[..., 2] = self.img_seg[..., 2] * self.mask * 1.
 
+        # change background color 
         if self.color == 'white':
+            # if color is set on <white>
             self.new_img = self.img_seg .reshape(self.shape[0], self.shape[1], 3)
             self.new_img = ImageProcess(
                     self.images, self.threshold, self.radius, self.method, self.color
                             ).BackgroundColor(img=self.new_img, lower_color=lower_color, 
                                               upper_color=upper_color, value=value)
-        else:  self.new_img = self.img_seg 
+        elif self.color == 'black':
+            # if color is set on <black>
+            self.new_img = self.img_seg 
+        else:  
+            # if image not in [white, black]
+            self.new_img = None 
             
         return self.new_img
     
 class FinalProcess:
     def __init__(self, 
-                threshold   : list[int, int]  = [0, 80], 
-                radius      : float = 2.,
-                method      : str   = 'numpy',
-                color       : str   = 'white'
+                threshold   : list[int, int]  = [0, 80], # list of values extracted from histogram colors 
+                radius      : float = 2.,                # a float number used for dilation and erosion operation
+                method      : str   = 'numpy',           # method used for segmenation: method can be : <where> or <numpy>
+                color       : str   = 'white'            # color is string type: takes also two values : <white> or <black>
                 ) -> None   :
         
         self.threshold  = threshold
@@ -489,26 +525,54 @@ class FinalProcess:
         
     def imgSegmentation(self,
             x           : any,
-            upper_color : list[int, int, int] = [30, 30, 30],  
-            lower_color : list[int, int, int] = [0, 0, 0],
+            upper_color : list[int, int, int]       = [30, 30, 30],  
+            lower_color : list[int, int, int]       = [0, 0, 0],
             value       : list[float, float, float] = [1., 1., 1.]):
         
+        """
+        arg:
+            (x, upper_color, lower_color, value)
+
+            * x is tf.tensor of shape (m, m, c) here c is the channel and m is the image size
+            * upper_color is a list of value used t0 fix the maximum along (r, g, b)
+            * lower_color is a list of value used to fix the minimum along (r, g, b)
+            * values is a list of normalized pixels used to change the background 
+
+        return:
+            tf.tensor or None type 
+        """
+
         import tensorflow as tf 
 
-        self.shape = x.shape
-        self.dtype = x.dtype
-  
-        self.image          = x.numpy().astype('float32')
-        self.image_lab      = RGB2LAB_SPACE(image=self.image.copy())
-        self.images         = (self.image, self.image_lab)
+        #####################################################################
+        ###############  Semantic image segmentation  section ###############
+        #####################################################################
 
+        # getting image dimension 
+        self.shape = x.shape
+        # getting image type 
+        self.dtype = x.dtype
+
+        # converting image in a numpy array type 
+        self.image          = x.numpy().astype('float32')
+        # converting image from RGB to RGB-LAB
+        self.image_lab      = RGB2LAB_SPACE(image=self.image.copy())
+        # creating a tuple for the next process
+        self.images         = (self.image, self.image_lab)
+        # running process 
         self.image          = ImageProcess(self.images, self.threshold, 
                                     self.radius, self.method, self.color).\
                                         Segmentation(upper_color, lower_color, value)
 
-        self.x = tf.constant(self.image, dtype=self.dtype, shape=self.shape)
+        try:
+            # converting image format from numpy array type to tf.tensor 
+            self.x = tf.constant(self.image, dtype=self.dtype, shape=self.shape)
 
-        return self.x
+            # returning return 
+            return self.x
+        except TypeError:
+            raise ValueError("None type cannot be converted in tensorflow tensor.\
+                    Please check the color or lower and upper range values and try again")
 
 def remove_background(
         x           : any, 
