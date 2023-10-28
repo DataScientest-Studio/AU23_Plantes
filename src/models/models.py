@@ -3,7 +3,8 @@ from sklearn.metrics import classification_report
 import src.models as lm
 import src.visualization as lv
 import src.features as lf
-
+from skimage.morphology import closing
+from skimage.morphology import disk 
 import numpy as np
 import pandas as pd
 
@@ -259,10 +260,6 @@ class Trainer():
         lv.graphs.plot_confusion_matrix(self.results, self.record_name)
 
 
-
-
-
-
 """"
 
 
@@ -290,8 +287,6 @@ class Stage1(Trainer):
             self.base_model.model.trainable = False
             self.compile_fit(lr=self.lr1, epochs=self.epoch1)
 
-
-
 class Stage1MobileNetv3(Stage1):
      record_name = "Stage-1_MobileNetv3"
 
@@ -299,7 +294,6 @@ class Stage1MobileNetv3(Stage1):
         # set the base model -- must be set before super().__init__()
         self.base_model = lm.model_wrapper.MobileNetv3(self.img_size)
         super().__init__(data_wrapper)
-
 
 class Stage1ResNetv2(Stage1):
     record_name = "Stage-1_ResNetv2"
@@ -334,28 +328,29 @@ class Stage2(Trainer):
         self.base_model.model.trainable = False
         self.compile_fit(lr=self.lr1, epochs=self.epoch1)
 
-class Stage2MobileNetv3(Stage1):
+class Stage2MobileNetv3(Stage2):
     record_name = "Stage-2_MobileNetv3"
 
     def __init__(self, data_wrapper):
         # set the base model -- must be set before super().__init__()
         self.base_model = lm.model_wrapper.MobileNetv3(self.img_size)
-        def preprocessing(x):
-            return self.base_model.preprocessing(remove_background(x))
+        #def preprocessing(x):
+        #    return self.base_model.preprocessing(remove_background(x))
 
-        self.base_model.preprocessing = preprocessing
+        #self.base_model.preprocessing = preprocessing
+        self.base_model.preprocessing = remove_background
         super().__init__(data_wrapper)
 
-class Stage2ResNetv2(Stage1):
+class Stage2ResNetv2(Stage2):
     record_name = "Stage-2_ResNetv2"
 
     def __init__(self, data_wrapper):
         # set the base model -- must be set before super().__init__()
         self.base_model = lm.model_wrapper.ResNet50V2(self.img_size)
-        def preprocessing(x):
-            return self.base_model.preprocessing(remove_background(x))
+        #def preprocessing(x):
+        #    return self.base_model.preprocessing(remove_background(x))
 
-        self.base_model.preprocessing= preprocessing
+        self.base_model.preprocessing = remove_background
         super().__init__(data_wrapper)
 
 def RGB2LAB_SPACE(image : np.ndarray):
@@ -375,22 +370,15 @@ def RGB2LAB_SPACE(image : np.ndarray):
     filter[:, :, 2] = cv2.normalize(filter[:, :, 2], None, 0, 1, cv2.NORM_MINMAX)
 
     return filter
-
+    
 class ImageProcess:
-    def __init__(self, 
-                images      : tuple[np.ndarray, np.ndarray], 
-                threshold   : list[int, int]  = [0, 80], 
-                radius      : float = 2.,
-                method      : str   = 'numpy',
-                color       : str   = 'white'
-                ) -> None   :
-        
-        self.images     = images
-        self.threshold  = threshold
-        self.radius     = radius
-        self.method     = method
-        self.color      = color
-        
+    def __init__(self,) -> None   :
+        self.images     :tuple[np.ndarray, np.ndarray] = None
+        self.threshold  :list[int, int] = None
+        self.radius     :float  = None
+        self.method     :str    = None
+        self.color      :str    = None
+
     def getMask(self,) -> np.ndarray:
 
         """
@@ -481,7 +469,7 @@ class ImageProcess:
         self.shape       = self.images[0].shape
 
         # creating mask from image_lab
-        self.mask        = ImageProcess(self.images, self.threshold, self.radius, self.method, self.color).getMask()
+        self.mask        = self.getMask()
         # converting mask in a float type
         self.mask        = self.mask * 1.
 
@@ -497,9 +485,7 @@ class ImageProcess:
         if self.color == 'white':
             # if color is set on <white>
             self.new_img = self.img_seg .reshape(self.shape[0], self.shape[1], 3)
-            self.new_img = ImageProcess(
-                    self.images, self.threshold, self.radius, self.method, self.color
-                            ).BackgroundColor(img=self.new_img, lower_color=lower_color, 
+            self.new_img = self.BackgroundColor(img=self.new_img, lower_color=lower_color, 
                                               upper_color=upper_color, value=value)
         elif self.color == 'black':
             # if color is set on <black>
@@ -510,14 +496,14 @@ class ImageProcess:
             
         return self.new_img
     
-class FinalProcess:
+class FinalProcess(ImageProcess):
     def __init__(self, 
                 threshold   : list[int, int]  = [0, 80], # list of values extracted from histogram colors 
                 radius      : float = 2.,                # a float number used for dilation and erosion operation
                 method      : str   = 'numpy',           # method used for segmenation: method can be : <where> or <numpy>
                 color       : str   = 'white'            # color is string type: takes also two values : <white> or <black>
                 ) -> None   :
-        
+        super().__init__()
         self.threshold  = threshold
         self.radius     = radius
         self.method     = method
@@ -552,22 +538,29 @@ class FinalProcess:
         self.shape = x.shape
         # getting image type 
         self.dtype = x.dtype
+        # converting image in a numpy array type 
+        self.is_numpy_array = False 
 
         # converting image in a numpy array type 
-        self.image          = x.numpy().astype('float32')
+        if type(x) == type(np.array([])):
+            self.is_numpy_array = True 
+            self.image  = x.astype('float32')
+        else:
+            self.image  = x.numpy().astype('float32')
+
         # converting image from RGB to RGB-LAB
         self.image_lab      = RGB2LAB_SPACE(image=self.image.copy())
         # creating a tuple for the next process
         self.images         = (self.image, self.image_lab)
         # running process 
-        self.image          = ImageProcess(self.images, self.threshold, 
-                                    self.radius, self.method, self.color).\
-                                        Segmentation(upper_color, lower_color, value)
+        self.image          = self.Segmentation(upper_color, lower_color, value)
 
         try:
             # converting image format from numpy array type to tf.tensor 
-            self.x = tf.constant(self.image, dtype=self.dtype, shape=self.shape)
-
+            if self.is_numpy_array is False:
+                self.x = tf.constant(self.image, dtype=self.dtype, shape=self.shape)
+            else:
+                self.x = self.image.astype("float32")
             # returning return 
             return self.x
         except TypeError:
@@ -576,9 +569,9 @@ class FinalProcess:
 
 def remove_background(
         x           : any, 
-        color       : str='white', 
-        radius      : float=4.,
-        threshold   : list[int, int]=[0, 80]
+        color       : str   = 'black', 
+        radius      : float = 4.,
+        threshold   : list[int, int] = [0, 80]
         ) -> any:
     
     x = FinalProcess(
