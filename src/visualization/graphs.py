@@ -95,7 +95,7 @@ def plot_confusion_matrix(results: str, record_name: str = ""):
 
 
 def display_results(results: pd.DataFrame, nb: int = 15, gradcam: bool = False, model: Model = None, base_model_wrapper : lm.model_wrapper.BaseModelWrapper = None,
-                    img_size: tuple = None, record_name: str = None):
+                    img_size: tuple = None, record_name: str = None, segmented:bool=False, guidedGrad_cam : bool = False):
     """
     Display the results of a classification model.
     Parameters:
@@ -110,10 +110,64 @@ def display_results(results: pd.DataFrame, nb: int = 15, gradcam: bool = False, 
     Returns:
     - None
     """
+
+    results_df = results.reset_index(drop=True)
+
+    #nb += 6
+    if nb <= 6:
+        nrows, ncols = 1, nb 
+    else:
+        nrows = nb / 6 
+        if nrows > nb // 6:
+            nrows = (nb // 6) + 1
+        else:
+            nrows = nb // 6
+        ncols  = 6
+    
+    fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(int(ncols * 2 + 1.), int(nrows * 2 + 1.)))
+    axes = axes.ravel()
+
+    n = -1
+    for i in range(ncols):
+        for j in range(nrows):
+            n += 1
+            if n < nb:
+                axes[n].axis('off')
+                if gradcam:
+                    if guidedGrad_cam:
+                        if n % 2 == 0:
+                            image = lf.data_builder.gradCAMImage(f"{results_df.filename[i]}", img_size, model, base_model_wrapper, segmented=segmented )
+                        else:
+                            image = lf.data_builder.gradCAMImage(f"{results_df.filename[i]}", img_size, model, base_model_wrapper, 
+                                                                                segmented=segmented, guidedGrad_cam=guidedGrad_cam )
+                    else:
+                        image = lf.data_builder.gradCAMImage(f"{results_df.filename[i]}", img_size, model, base_model_wrapper, segmented=segmented )
+                else:
+                    image = lf.data_builder.readImage(f"{results_df.filename[i]}")
+                
+                axes[n].imshow(image)
+                if guidedGrad_cam:
+                    if n % 2 == 0:
+                        axes[n].set_title(f'True: {results_df.actual[i]} \n Pred: {results_df.predicted[i]}', fontsize='small')
+                else:
+                    axes[n].set_title(f'True: {results_df.actual[i]} \n Pred: {results_df.predicted[i]}', fontsize='small')
+            else: axes[n].remove()
+
+    if record_name:
+        if gradcam:
+            fig.suptitle(f"{record_name} – Result Samples with GradCAM", fontsize="x-large")
+        else:
+            fig.suptitle(f"{record_name} – Result Samples", fontsize="x-large")
+
+    plt.show()
+
+
+    """
     results_df = results.reset_index(drop=True)
     fig = plt.figure(figsize=(20, 20))
     n = 0
     for i in range(nb):
+        plt.axis('off')
         n += 1
         plt.subplot(math.ceil(16 / 3), 3, n)
         plt.subplots_adjust(hspace=0.5, wspace=0.3)
@@ -122,10 +176,12 @@ def display_results(results: pd.DataFrame, nb: int = 15, gradcam: bool = False, 
         else:
             image = lf.data_builder.readImage(f"{results_df.filename[i]}")
         plt.imshow(image)
-        plt.title(f'{results_df.actual[i]} \n Pred: {results_df.predicted[i]}')
+        plt.title(f'{results_df.actual[i]} \n Pred: {results_df.predicted[i]}', fontsize='medium')
     if record_name:
         if gradcam:
-            fig.suptitle(f"{record_name} – Result Samples with GradCAM")
+            fig.suptitle(f"{record_name} – Result Samples with GradCAM", fontsize="x-large")
         else:
-            fig.suptitle(f"{record_name} – Result Samples")
+            fig.suptitle(f"{record_name} – Result Samples", fontsize="x-large")
     plt.show()
+    """
+
