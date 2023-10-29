@@ -1,4 +1,5 @@
 from typing import Tuple
+import matplotlib.pyplot as plt
 
 import pandas as pd
 from pathlib import Path
@@ -6,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils.class_weight import compute_class_weight
 
 import matplotlib.cm as cm
+from skimage.transform import resize
 
 import tensorflow as tf
 from tensorflow import keras
@@ -17,8 +19,9 @@ import pandas as pd
 from types import SimpleNamespace
 import numpy as np
 import src.models as lm
+import cv2 
 
-
+from src.features import segmentation
 # data_dir= 'sources/nonsegmentedv2/'
 data_dir:str = 'sources/v2-plant-seedlings-dataset/'
 
@@ -52,8 +55,6 @@ class ImageDataWrapper() :
         self.nb_classes = nb_classes
         self.weights = weights
 
-
-
 def create_dataset_from_directory (data_dir: str = data_dir,  train_size: float = 0.9, shuffle: bool = True,) -> ImageDataWrapper:
     """
     Creates a dataset from the given data directory.
@@ -84,8 +85,6 @@ def create_dataset_from_directory (data_dir: str = data_dir,  train_size: float 
     weights = {i: w for i, w in enumerate(class_weights)}
 
     return ImageDataWrapper(dataframe=data, train_df=train_df, test_df=test_df, classes= classes, nb_classes=nb_classes, weights=weights)
-
-
 
 def get_data_flows(image_data_wrapper: ImageDataWrapper, base_model: lm.model_wrapper.BaseModelWrapper, batch_size: int, data_augmentation: dict, img_size : tuple) -> Tuple :
     """
@@ -141,7 +140,6 @@ def get_data_flows(image_data_wrapper: ImageDataWrapper, base_model: lm.model_wr
 
     return train, validation, test
 
-
 def get_predictions_dataframe(model : Model, test_flow : DataFrameIterator , test_df : pd.DataFrame, shuffle:bool=True, random_state:int=random_state) -> pd.DataFrame:
     """
     Generate a dataframe with predicted and actual labels based on the given model and test data.
@@ -176,7 +174,6 @@ def get_predictions_dataframe(model : Model, test_flow : DataFrameIterator , tes
         result_df = result_df.sample(frac=1, random_state=random_state).reset_index(drop=True)
     return result_df
 
-
 def readImage(path:str, size:tuple=None) -> np.ndarray:
     """
     Reads an image from the given path and performs some preprocessing steps.
@@ -192,10 +189,6 @@ def readImage(path:str, size:tuple=None) -> np.ndarray:
     img = img_to_array(img)
     img = img/255.
     return img
-
-
-
-
 
 def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model, base_model_wrapper : lm.model_wrapper.BaseModelWrapper) -> np.ndarray:
     """
@@ -225,10 +218,13 @@ def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model, base_mod
     heatmap = last_conv_layer_output @ pooled_grads[..., tf.newaxis]
     heatmap = tf.squeeze(heatmap)
     heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
+    heatmap /= tf.math.reduce_max(heatmap)
+
     return heatmap.numpy()
 
-
-def gradCAMImage(img_path :str, img_size : tuple, model : Model, base_model_wrapper : lm.model_wrapper.BaseModelWrapper) -> np.ndarray:
+def gradCAMImage(img_path :str, img_size : tuple, model : Model, 
+                base_model_wrapper : lm.model_wrapper.BaseModelWrapper, 
+                segmented:bool=True, guidedGrad_cam : bool =False) -> np.ndarray:
     """
     Generates a Grad-CAM image by overlaying the heatmap on the original image.
 
@@ -245,6 +241,8 @@ def gradCAMImage(img_path :str, img_size : tuple, model : Model, base_model_wrap
     img = load_img(path, target_size=img_size)
     img = img_to_array(img)
     expended_img = np.expand_dims(img / 255, axis=0)
+    #expended_img      = np.uint8(255 * expended_img)
+
     heatmap = make_gradcam_heatmap(expended_img, model, base_model_wrapper)
     heatmap = np.uint8(255 * heatmap)
 
@@ -260,8 +258,74 @@ def gradCAMImage(img_path :str, img_size : tuple, model : Model, base_model_wrap
     jet_heatmap = jet_heatmap.resize((img.shape[1], img.shape[0]))
     jet_heatmap = tf.keras.preprocessing.image.img_to_array(jet_heatmap)
 
+    if segmented:
+        img = resize(plt.imread(path), output_shape=img_size)
+        img = segmentation.remove_background(x=img)
+        img = tf.keras.utils.img_to_array(img)
+        img = np.uint8(img * 255)
+        IMG = img.copy( )
+
+        shape           = (1,) + img.shape
+        IMG             = IMG.reshape(shape)
+        gb              = guided_backprop(model=model, img=IMG, upsample_size=img_size) 
+        guided_gradcam  = deprocess_image(gb * jet_heatmap)
+        guided_gradcam  = cv2.cvtColor(guided_gradcam, cv2.COLOR_BGR2RGB)
+
+        if guidedGrad_cam:
+            return guided_gradcam
+    
     # Superimpose the heatmap on original image
-    superimposed_img = jet_heatmap * 0.8 + img
+    superimposed_img = jet_heatmap * 0.4 + img
     superimposed_img = tf.keras.preprocessing.image.array_to_img(superimposed_img)
 
     return superimposed_img
+
+def guided_backprop(model, img : np.ndarray, upsample_size: tuple[int, int]):
+        import cv2 
+        def LAYER(model):
+            for layer in reversed(model.layers):
+                if 'conv' in layer.name:
+                    return layer
+            raise ValueError("Couche non trouvée")
+        
+        base_model           = Model(model.input, [model.output, LAYER(model).output])
+        base_model.trainable = True
+        
+        with tf.GradientTape() as tape:
+            inputs = tf.cast(img, tf.float32)
+            tape.watch(inputs)
+            outputs = base_model(inputs)
+
+        grads       = tape.gradient(outputs, inputs)[0]
+        saliency    = cv2.resize(np.asarray(grads), upsample_size)
+
+        return saliency
+
+def deprocess_image(x : np.ndarray):
+    import keras.backend as K
+    
+    # normalize tensor: center on 0., ensure std is 0.25
+    x = x.copy()
+    x -= x.mean()
+    x /= (x.std() + K.epsilon())
+    x *= 0.25
+
+    # clip to [0, 1]
+    x += 0.5
+    x = np.clip(x, 0, 1)
+
+    # convert to RGB array
+    x *= 255
+    if K.image_data_format() == 'channels_first':
+        x = x.transpose((1, 2, 0))
+    x = np.clip(x, 0, 255).astype('uint8')
+    return x
+
+def overlay_gradCAM(img, cam3):
+    import cv2
+
+    cam3    = np.uint8(255*cam3)
+    cam3    = cv2.applyColorMap(cam3, cv2.COLORMAP_JET)
+    new_img = 0.3*cam3 + 0.5*img
+    
+    return (new_img*255.0/new_img.max()).astype("uint8")
