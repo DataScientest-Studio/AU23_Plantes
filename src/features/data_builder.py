@@ -74,7 +74,13 @@ def create_dataset_from_directory (data_dir: str = data_dir,  train_size: float 
 
     data = pd.concat([images, labels], axis=1)
 
-    #TODO remove bad images
+    # Remove bad images
+    index_to_drop = data[
+        ((data['label'] == 'Sugar beet') & (data['path'].str.endswith('97.png'))) |
+        ((data['label'] == 'Common Chickweed') & (data['path'].str.endswith('351.png'))) |
+        ((data['label'] == 'Loose Silky-bent') & (data['path'].str.endswith('304.png')))
+    ].index
+    data.drop(index_to_drop, inplace=True)
 
     train_df, test_df = train_test_split(data, train_size=train_size, shuffle=shuffle, random_state=random_state)
     classes = sorted(data.label.unique())
@@ -83,7 +89,7 @@ def create_dataset_from_directory (data_dir: str = data_dir,  train_size: float 
     train_classes = train_df['label'].values
     class_weights = compute_class_weight(class_weight='balanced', classes=np.unique(train_classes), y=train_classes)
     weights = {i: w for i, w in enumerate(class_weights)}
-
+    
     return ImageDataWrapper(dataframe=data, train_df=train_df, test_df=test_df, classes= classes, nb_classes=nb_classes, weights=weights)
 
 def get_data_flows(image_data_wrapper: ImageDataWrapper, base_model: lm.model_wrapper.BaseModelWrapper, batch_size: int, data_augmentation: dict, img_size : tuple) -> Tuple :
