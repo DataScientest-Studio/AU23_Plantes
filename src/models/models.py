@@ -43,15 +43,17 @@ class Trainer():
         height_shift_range=0.2,
         fill_mode="nearest",
     )
-    lr_reduction = ReduceLROnPlateau(monitor='val_loss', factor=0.1,
-                                     patience=2, verbose=1),
-    stop_callback = EarlyStopping(monitor='val_loss', patience=3,
-                                  restore_best_weights=True, verbose=1)
-    epoch1: int = 1
-    lr1: float = 0.001
+
+    epoch1: int = 1 #12
+    lr1: float = 1e-3
     # used for 2 rounds fine tuning
-    epoch2: int = 1
-    lr2: float = 0.00001
+    epoch2: int = 1 #30
+    lr2: float = lr1*1e-1
+
+    lr_reduction = ReduceLROnPlateau(monitor='val_loss', factor=0.1, min_delta=1e-3,
+                                     patience=tf.math.ceil(epoch1/10), verbose=1),
+    stop_callback = EarlyStopping(monitor='val_loss', patience=tf.math.ceil(epoch1/5),
+                                  restore_best_weights=True, verbose=1)
 
     batch_size = 32
 
@@ -145,6 +147,24 @@ class Trainer():
         else:
             self.print_step("Loading")
             self.deserialize(campaign_id=campain_id)
+
+    def make_trainable_base_model_last_layers(self, nb_layer: int = 10):
+        """
+        Makes the last `nb_layer` layers of the base model trainable.
+        Avoid making trainable the Normallization layers
+        Args:
+            nb_layer (int): The number of last layers to make trainable. Defaults to 10.
+
+        Returns:
+            None
+        """
+        self.base_model.model.trainable = True
+        for layer in self.base_model.model.layers:
+            layer.trainable = True
+        for layer in self.base_model.model.layers[:-10]:
+            if not ('Normalization' in str(type(self.base_model.model.layers[-1]))):
+                layer.trainable = False
+
 
     def process_training(self):
         """
@@ -261,96 +281,3 @@ class Trainer():
         self.print_step("Display confusion matrix")
         lv.graphs.plot_confusion_matrix(self.results, self.record_name)
 
-
-""""
-
-
-    
-    Stage 1 : simple training (no fine tuning, no background removal, simple classification)
-    comparison between the 2 selected models : Mobilnetv3 and Resnet
-
-
-
-
-"""
-
-class Stage1(Trainer):
-    # abstract class
-    record_name = "none"
-
-    def __init__(self, data_wrapper):
-        super().__init__(data_wrapper)
-        x = self.base_model.model.output
-        x = Dropout(0.2)(x)
-        output = Dense(12, activation='softmax', name='main')(x)
-        self.model = Model(inputs=self.base_model.model.input, outputs=output)
-
-    def process_training(self):
-            self.base_model.model.trainable = False
-            self.compile_fit(lr=self.lr1, epochs=self.epoch1)
-
-class Stage1MobileNetv3(Stage1):
-     record_name = "Stage-1_MobileNetv3"
-
-     def __init__(self, data_wrapper):
-        # set the base model -- must be set before super().__init__()
-        self.base_model = lm.model_wrapper.MobileNetv3(self.img_size)
-        super().__init__(data_wrapper)
-
-class Stage1ResNetv2(Stage1):
-    record_name = "Stage-1_ResNetv2"
-
-    def __init__(self, data_wrapper):
-        # set the base model -- must be set before super().__init__()
-        self.base_model = lm.model_wrapper.ResNet50V2(self.img_size)
-        super().__init__(data_wrapper)
-
-
-"""
-
-    Stage 2 : simple training (no fine tuning, simple classification)
-    with background removal
-    comparison between the 2 selected models : Mobilnetv3 and Resnet
-
-
-"""
-
-class Stage2(Trainer):
-    # abstract class
-    record_name = "none"
-
-    def __init__(self, data_wrapper):
-        super().__init__(data_wrapper)
-        x = self.base_model.model.output
-        x = Dropout(0.2)(x)
-        output = Dense(12, activation='softmax', name='main')(x)
-        self.model = Model(inputs=self.base_model.model.input, outputs=output)
-
-    def process_training(self):
-        self.base_model.model.trainable = False
-        self.compile_fit(lr=self.lr1, epochs=self.epoch1)
-
-class Stage2MobileNetv3(Stage2):
-    record_name = "Stage-2_MobileNetv3"
-
-    def __init__(self, data_wrapper):
-        # set the base model -- must be set before super().__init__()
-        self.base_model = lm.model_wrapper.MobileNetv3(self.img_size)
-        #def preprocessing(x):
-        #    return self.base_model.preprocessing(remove_background(x))
-
-        #self.base_model.preprocessing = preprocessing
-        self.base_model.preprocessing = lf.segmentation.remove_background
-        super().__init__(data_wrapper)
-
-class Stage2ResNetv2(Stage2):
-    record_name = "Stage-2_ResNetv2"
-
-    def __init__(self, data_wrapper):
-        # set the base model -- must be set before super().__init__()
-        self.base_model = lm.model_wrapper.ResNet50V2(self.img_size)
-        #def preprocessing(x):
-        #    return self.base_model.preprocessing(remove_background(x))
-
-        self.base_model.preprocessing = lf.segmentation.remove_background
-        super().__init__(data_wrapper)
