@@ -23,8 +23,8 @@ class Stage1(lm.models.Trainer):
     # abstract class
     record_name = "none"
 
-    def __init__(self, data_wrapper):
-        super().__init__(data_wrapper)
+    def __init__(self, data_wrapper, campaign_id):
+        super().__init__(data_wrapper,campaign_id)
         x = self.base_model.model.output
         x = GlobalAveragePooling2D()(x)
         x = Dropout(0.2)(x)
@@ -39,18 +39,18 @@ class Stage1(lm.models.Trainer):
 class Stage1MobileNetv3(Stage1):
     record_name = "Stage-1_MobileNetv3"
 
-    def __init__(self, data_wrapper):
+    def __init__(self, data_wrapper, campaign_id):
         # set the base model -- must be set before super().__init__()
         self.base_model = lm.model_wrapper.MobileNetv3(self.img_size)
-        super().__init__(data_wrapper)
+        super().__init__(data_wrapper, campaign_id)
 
 
 class Stage1ResNetv2(Stage1):
     record_name = "Stage-1_ResNetv2"
 
-    def __init__(self, data_wrapper):
+    def __init__(self, data_wrapper, campaign_id):
         # set the base model -- must be set before super().__init__()
         self.base_model = lm.model_wrapper.ResNet50V2(self.img_size)
-        super().__init__(data_wrapper)
+        super().__init__(data_wrapper, campaign_id)
 
 

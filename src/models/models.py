@@ -1,6 +1,7 @@
 from sklearn.metrics import classification_report
 
 import matplotlib
+import matplotlib.pyplot as plt
 import src.models as lm
 import src.visualization as lv
 import src.features as lf
@@ -71,17 +72,18 @@ class Trainer():
     history1: dict = None
     history2: dict = None
     results: pd.DataFrame = None
+    campaign_id: str = None
 
 
-
-    def __init__(self, data_wrapper):
+    def __init__(self, data_wrapper, campaign_id="default"):
+        self.campaign_id = campaign_id
         self.data = data_wrapper
         # build data flows
         self.train, self.validation, self.test = lf.data_builder.get_data_flows(self.data, self.base_model,
                                                                                 self.batch_size, self.data_augmentation,
                                                                                 self.img_size)
 
-    def serialize(self, campaign_id=None):
+    def serialize(self):
         """
         Serializes the model and history objects to disk.
 
@@ -93,7 +95,7 @@ class Trainer():
         Returns:
             List[str]: A list of file paths containing the serialized model and history filenames.
         """
-        history1_file, history2_file, model_file = self.get_filenames(campaign_id)
+        history1_file, history2_file, model_file = self.get_filenames()
         self.model.save(model_file)
         with open(history1_file, 'wb') as f:
             pickle.dump(self.history1, f)
@@ -102,30 +104,24 @@ class Trainer():
                 pickle.dump(self.history2, f)
         return [model_file, history1_file, history2_file]
 
-    def save_fig(self, plt: matplotlib.pyplot, campaign_id: str, name: str):
-        plt.savefig(f"{FIGURE_DIR}/{campaign_id}/{self.record_name}_{name}")
+    def save_fig(self, plot: matplotlib.pyplot, name: str):
+        plot.savefig(f"{FIGURE_DIR}/{self.campaign_id}/{self.record_name}_{name}")
         
 
-    def get_filenames(self, campaign_id):
-        if (campaign_id):
-            path = f"{RECORD_DIR}/{campaign_id}/{self.record_name}"
-        else:
-            path = f"{RECORD_DIR}/{self.record_name}"
+    def get_filenames(self):
+        path = f"{RECORD_DIR}/{self.campaign_id}/{self.record_name}"
         model_file = path + '_model.h5'
         history1_file = path + '_history1.pkl'
         history2_file = path + '_history2.pkl'
         return history1_file, history2_file, model_file
 
-    def deserialize(self, campaign_id):
+    def deserialize(self):
         """
         Deserialize the model, history1, and history2 from the given timestamp string.
 
-        :param campaign_id: The timestamp string representing the desired snapshot.
-        :type campaign_id: str
-
         :return: None
         """
-        history1_file, history2_file, model_file = self.get_filenames(campaign_id)
+        history1_file, history2_file, model_file = self.get_filenames()
         self.model = keras.models.load_model(model_file)
         with open(history1_file, 'rb') as f:
             self.history1 = pickle.load(f)
@@ -162,11 +158,10 @@ class Trainer():
         self.base_model.preprocessing = preprocessing_lambda
 
 
-    def fit_or_load(self, campaign_id=None, training=True):
+    def fit_or_load(self, training=True):
         """
         Fit or load the model for training or inference.
         Parameters:
-            campaign_id (optional): The ID of the campaign to load or serialize.
             training (bool): A flag indicating whether to perform training or inference.
         Returns:
             None
@@ -175,10 +170,10 @@ class Trainer():
             self.print_step("Training")
             self.process_training()
             self.print_step("Serialize ")
-            self.serialize(campaign_id=campaign_id)
+            self.serialize()
         else:
             self.print_step("Loading")
-            self.deserialize(campaign_id=campaign_id)
+            self.deserialize()
 
     def make_trainable_base_model_last_layers(self, nb_layer: int = 10):
         """
@@ -259,25 +254,33 @@ class Trainer():
         return self.results
 
 
-    def print_classification_report(self) -> str:
+    def print_classification_report(self, save=False, show =True) -> str:
         """
         Print the classification report and return it as a string.
         """
         self.print_step("Classification Report")
         cr = classification_report(self.results.actual, self.results.predicted)
-        print(cr)
+        if (show) : print(cr)
+        if (save) :
+            fig, ax = plt.subplots(figsize=(6, 3))
+            ax.axis('off')
+            ax.text(0, 3, cr, horizontalalignment='left', verticalalignment='center',
+                    fontsize=12, transform=ax.transAxes)
+            self.save_fig(plt,"classification_report.png")
         return cr
 
-    def display_history_graphs(self) -> None:
+    def display_history_graphs(self, save=False, show =True) -> None:
         """
         Display the graphs of the training and validation history.
         """
         self.print_step("Display training history graphs")
-        lv.graphs.plot_history_graph(self.history1, self.history2, self.record_name)
+        plot = lv.graphs.plot_history_graph(self.history1, self.history2, self.record_name, show =show)
+        self.save_fig(plot, "history_graph.png")
+
 
     def display_samples(self, nb: int, include_true_pred = True, 
                         include_false_pred = True, gradcam: bool = False, 
-                        segmented:bool=False, guidedGrad_cam : bool =False) -> None :
+                        segmented:bool=False, guidedGrad_cam : bool =False, save=False, show =True) -> None :
         """
         Display training data samples with gradcam if gradcam is True.
 
@@ -295,11 +298,17 @@ class Trainer():
         if (include_true_pred and not include_false_pred): results = results[results['Same']==True]
         if (not include_true_pred and  include_false_pred): results = results[results['Same']==False]
         if gradcam :
-            lv.graphs.display_results(results, nb=nb, record_name=self.record_name, gradcam=True, model=self.model,
-                        base_model_wrapper=self.base_model, img_size=self.img_size, segmented=segmented, guidedGrad_cam=guidedGrad_cam)
-        else : lv.graphs.display_results(results, nb=nb, record_name=self.record_name)
+            plot = lv.graphs.display_results(results, nb=nb, record_name=self.record_name, gradcam=True, model=self.model,
+                        base_model_wrapper=self.base_model, img_size=self.img_size, segmented=segmented, guidedGrad_cam=guidedGrad_cam, show=show)
+        else : plot = lv.graphs.display_results(results, nb=nb, record_name=self.record_name, show=show)
+        if (save) :
+            endstr = ''
+            if segmented: endstr += '_segmented'
+            if gradcam : endstr += '_gradcam'
+            if guidedGrad_cam: endstr += '_guidedGradcam'
+            self.save_fig(plot, f"sample_graphs{endstr}.png")
 
-    def display_confusion_matrix(self) -> None:
+    def display_confusion_matrix(self, save = False, show = True) -> None:
         """
        This function display the confusion matrix for the results of the model.
        It uses the `plot_confusion_matrix` function from the `lv.graphs` module to plot the matrix.
@@ -311,5 +320,7 @@ class Trainer():
         - None
         """
         self.print_step("Display confusion matrix")
-        lv.graphs.plot_confusion_matrix(self.results, self.record_name)
+        plot = lv.graphs.plot_confusion_matrix(self.results, self.record_name, show = show)
+        if (save) :
+            self.save_fig(plot, f"confusion_matrix.png")
 

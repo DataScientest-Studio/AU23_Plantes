@@ -23,8 +23,8 @@ class Stage4(lm.models.Trainer):
     # abstract class
     record_name = "none"
 
-    def __init__(self, data_wrapper):
-        super().__init__(data_wrapper)
+    def __init__(self, data_wrapper, campaign_id):
+        super().__init__(data_wrapper, campaign_id)
         x = self.base_model.model.output
         x = Conv2D(128, (6, 6), activation='relu', padding='same', kernel_regularizer= l2(0.001))(x)
         x = BatchNormalization()(x)
@@ -54,17 +54,17 @@ class Stage4(lm.models.Trainer):
 class Stage4MobileNetv3(Stage4):
     record_name = "Stage-4_MobileNetv3"
 
-    def __init__(self, data_wrapper):
+    def __init__(self, data_wrapper, campaign_id):
         # set the base model -- must be set before super().__init__()
         self.base_model = lm.model_wrapper.MobileNetv3(self.img_size)
         self.add_background_removal()
-        super().__init__(data_wrapper)
+        super().__init__(data_wrapper, campaign_id)
 
 class Stage4ResNetv2(Stage4):
     record_name = "Stage-4_ResNetv2"
 
-    def __init__(self, data_wrapper):
+    def __init__(self, data_wrapper, campaign_id):
         # set the base model -- must be set before super().__init__()
         self.base_model = lm.model_wrapper.ResNet50V2(self.img_size)
         self.add_background_removal()
-        super().__init__(data_wrapper)
+        super().__init__(data_wrapper, campaign_id)

@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 import numpy as np
+
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -15,7 +16,7 @@ import tensorflow.keras as keras
 from keras.models import Model
 
 
-def plot_history_graph(history1: dict, history2: dict = None, record_name: str = None) -> None:
+def plot_history_graph(history1: dict, history2: dict = None, record_name: str = None, show=True) -> plt:
     """
     Generate a history graph using the provided training history.
     Parameters:
@@ -72,7 +73,8 @@ def plot_history_graph(history1: dict, history2: dict = None, record_name: str =
         plt.subplot(2, 2, 4)
         plot_loss(history2, 'Second round')
     fig.suptitle(f"{record_name} – Loss and Accuracy")
-    plt.show()
+    if (show) : plt.show()
+    return plt
 
 
 def plot_confusion_matrix(results: str, record_name: str = ""):
@@ -95,7 +97,7 @@ def plot_confusion_matrix(results: str, record_name: str = ""):
 
 
 def display_results(results: pd.DataFrame, nb: int = 15, gradcam: bool = False, model: Model = None, base_model_wrapper : lm.model_wrapper.BaseModelWrapper = None,
-                    img_size: tuple = None, record_name: str = None, segmented:bool=False, guidedGrad_cam : bool = False):
+                    img_size: tuple = None, record_name: str = None, segmented:bool=False, guidedGrad_cam : bool = False, show=True) -> plt:
     """
     Display the results of a classification model.
     Parameters:
@@ -159,7 +161,8 @@ def display_results(results: pd.DataFrame, nb: int = 15, gradcam: bool = False, 
         else:
             fig.suptitle(f"{record_name} – Result Samples", fontsize="x-large")
 
-    plt.show()
+    if (show) : plt.show()
+    return plt
 
 
     """
