@@ -1,5 +1,5 @@
 import src.models as lm
-
+import src.features as lf
 import tensorflow as tf
 from tensorflow import keras
 
@@ -38,11 +38,11 @@ class Stage2MobileNetv3(Stage2):
     def __init__(self, data_wrapper):
         # set the base model -- must be set before super().__init__()
         self.base_model = lm.model_wrapper.MobileNetv3(self.img_size)
-        preprocessing = self.base_model.preprocessing
-        def preprocessing_lambda(x):
-            return preprocessing(lf.segmentation.remove_background(x))
-        self.base_model.preprocessing = preprocessing_lambda
+        self.add_background_removal()
         super().__init__(data_wrapper)
+
+
+
 
 class Stage2ResNetv2(Stage2):
     record_name = "Stage-2_ResNetv2"
@@ -50,8 +50,5 @@ class Stage2ResNetv2(Stage2):
     def __init__(self, data_wrapper):
         # set the base model -- must be set before super().__init__()
         self.base_model = lm.model_wrapper.ResNet50V2(self.img_size)
-        preprocessing = self.base_model.preprocessing
-        def preprocessing_lambda(x):
-            return preprocessing(lf.segmentation.remove_background(x))
-        self.base_model.preprocessing = preprocessing_lambda
+        self.add_background_removal()
         super().__init__(data_wrapper)

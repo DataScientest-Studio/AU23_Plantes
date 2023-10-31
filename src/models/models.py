@@ -44,15 +44,16 @@ class Trainer():
         fill_mode="nearest",
     )
 
-    epoch1: int = 1 #12
+    epoch1: int = 12 #12
     lr1: float = 1e-3
     # used for 2 rounds fine tuning
-    epoch2: int = 1 #30
+    epoch2: int = 10 #30
     lr2: float = lr1*1e-1
 
     lr_reduction = ReduceLROnPlateau(monitor='val_loss', factor=0.1, min_delta=1e-3,
-                                     patience=tf.math.ceil(epoch1/10), verbose=1),
-    stop_callback = EarlyStopping(monitor='val_loss', patience=tf.math.ceil(epoch1/5),
+                                     patience=2,#tf.math.ceil(epoch1/10),
+                                     verbose=1),
+    stop_callback = EarlyStopping(monitor='val_loss', patience=3, #tf.math.ceil(epoch1/5),
                                   restore_best_weights=True, verbose=1)
 
     batch_size = 32
@@ -128,6 +129,31 @@ class Trainer():
 
     def print_step(self, step_name: str) -> str:
         print(f">>> {self.record_name} –– {step_name}")
+
+    def add_background_removal(self):
+        """
+        Adds a background removal step to the preprocessing pipeline of the base model.
+
+        This function modifies the `preprocessing` attribute of the `base_model` object.
+        It replaces the existing preprocessing function with a new function that performs
+        background removal on the input image.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
+        preproc = self.base_model.preprocessing
+
+        def preprocessing_lambda(image):
+            if image.dtype == 'float32':
+                image2 = (image - np.min(image)) / (np.max(image) - np.min(image))
+            image2 = lf.segmentation.remove_background(image2)
+            image2 = image2 * (np.max(image) - np.min(image)) + np.min(image)
+            return preproc(image2)
+
+        self.base_model.preprocessing = preprocessing_lambda
 
 
     def fit_or_load(self, campain_id=None, training=True):

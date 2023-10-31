@@ -45,10 +45,7 @@ class Stage3MobileNetv3(Stage3):
     def __init__(self, data_wrapper):
         # set the base model -- must be set before super().__init__()
         self.base_model = lm.model_wrapper.MobileNetv3(self.img_size)
-        preprocessing = self.base_model.preprocessing
-        def preprocessing_lambda(x):
-            return preprocessing(lf.segmentation.remove_background(x))
-        self.base_model.preprocessing = preprocessing_lambda
+        self.add_background_removal()
         super().__init__(data_wrapper)
 
 class Stage3ResNetv2(Stage3):
@@ -57,8 +54,5 @@ class Stage3ResNetv2(Stage3):
     def __init__(self, data_wrapper):
         # set the base model -- must be set before super().__init__()
         self.base_model = lm.model_wrapper.ResNet50V2(self.img_size)
-        preprocessing = self.base_model.preprocessing
-        def preprocessing_lambda(x):
-            return preprocessing(lf.segmentation.remove_background(x))
-        self.base_model.preprocessing = preprocessing_lambda
+        self.add_background_removal()
         super().__init__(data_wrapper)
