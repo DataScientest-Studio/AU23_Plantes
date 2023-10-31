@@ -1,5 +1,6 @@
 from sklearn.metrics import classification_report
 
+import matplotlib
 import src.models as lm
 import src.visualization as lv
 import src.features as lf
@@ -25,6 +26,7 @@ import pickle
 """ Model training """
 
 RECORD_DIR: str = "../models/records"
+FIGURE_DIR: str = "../reports/figures"
 
 class Trainer():
     #abstract class
@@ -79,7 +81,7 @@ class Trainer():
                                                                                 self.batch_size, self.data_augmentation,
                                                                                 self.img_size)
 
-    def serialize(self, campain_id=None):
+    def serialize(self, campaign_id=None):
         """
         Serializes the model and history objects to disk.
 
@@ -91,7 +93,7 @@ class Trainer():
         Returns:
             List[str]: A list of file paths containing the serialized model and history filenames.
         """
-        history1_file, history2_file, model_file = self.get_filenames(campain_id)
+        history1_file, history2_file, model_file = self.get_filenames(campaign_id)
         self.model.save(model_file)
         with open(history1_file, 'wb') as f:
             pickle.dump(self.history1, f)
@@ -100,9 +102,13 @@ class Trainer():
                 pickle.dump(self.history2, f)
         return [model_file, history1_file, history2_file]
 
-    def get_filenames(self, campain_id):
-        if (campain_id):
-            path = f"{RECORD_DIR}/{campain_id}/{self.record_name}"
+    def save_fig(self, plt: matplotlib.pyplot, campaign_id: str, name: str):
+        plt.savefig(f"{FIGURE_DIR}/{campaign_id}/{self.record_name}_{name}")
+        
+
+    def get_filenames(self, campaign_id):
+        if (campaign_id):
+            path = f"{RECORD_DIR}/{campaign_id}/{self.record_name}"
         else:
             path = f"{RECORD_DIR}/{self.record_name}"
         model_file = path + '_model.h5'
@@ -156,11 +162,11 @@ class Trainer():
         self.base_model.preprocessing = preprocessing_lambda
 
 
-    def fit_or_load(self, campain_id=None, training=True):
+    def fit_or_load(self, campaign_id=None, training=True):
         """
         Fit or load the model for training or inference.
         Parameters:
-            campain_id (optional): The ID of the campaign to load or serialize.
+            campaign_id (optional): The ID of the campaign to load or serialize.
             training (bool): A flag indicating whether to perform training or inference.
         Returns:
             None
@@ -169,10 +175,10 @@ class Trainer():
             self.print_step("Training")
             self.process_training()
             self.print_step("Serialize ")
-            self.serialize(campain_id=campain_id)
+            self.serialize(campaign_id=campaign_id)
         else:
             self.print_step("Loading")
-            self.deserialize(campaign_id=campain_id)
+            self.deserialize(campaign_id=campaign_id)
 
     def make_trainable_base_model_last_layers(self, nb_layer: int = 10):
         """
