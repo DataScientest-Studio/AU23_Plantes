@@ -35,8 +35,8 @@ def plot_history_graph(history1: dict, history2: dict = None, record_name: str =
 
     def plot_accuracy(history: dict, round_str: str):
         title = 'Accuracy (Training and Validation)'
-        plt.plot(history['main_categorical_accuracy'], label='Training Accuracy')
-        plt.plot(history['val_main_categorical_accuracy'], label='Validation Accuracy')
+        plt.plot(history['categorical_accuracy'], label='Training Accuracy')
+        plt.plot(history['val_categorical_accuracy'], label='Validation Accuracy')
         plt.legend(loc='lower right')
         plt.ylabel('Accuracy')
         plt.ylim([min, 1])
@@ -47,8 +47,8 @@ def plot_history_graph(history1: dict, history2: dict = None, record_name: str =
 
     def plot_loss(history: dict, round_str: str):
         title = 'Loss (Training and Validation)'
-        plt.plot(history['main_loss'], label='Training Loss')
-        plt.plot(history['val_main_loss'], label='Validation Loss')
+        plt.plot(history['loss'], label='Training Loss')
+        plt.plot(history['val_loss'], label='Validation Loss')
         plt.legend(loc='upper right')
         plt.ylabel('Cross Entropy')
         plt.ylim([0, 1.0])
@@ -77,7 +77,7 @@ def plot_history_graph(history1: dict, history2: dict = None, record_name: str =
     return plt
 
 
-def plot_confusion_matrix(results: str, record_name: str = ""):
+def plot_confusion_matrix(results: str, record_name: str = "", show=True) -> plt:
     """
     Generate a confusion matrix plot based on the provided results.
 
@@ -93,7 +93,8 @@ def plot_confusion_matrix(results: str, record_name: str = ""):
     labels = sorted(results.actual.unique())
     sns.heatmap(cf, annot=True, xticklabels=labels, yticklabels=labels, cmap='Blues', vmax=10)
     plt.title(f"{record_name} – Confusion Matrix")
-    plt.show()
+    if (show) : plt.show()
+    return plt
 
 
 def display_results(results: pd.DataFrame, nb: int = 15, gradcam: bool = False, model: Model = None, base_model_wrapper : lm.model_wrapper.BaseModelWrapper = None,

@@ -253,6 +253,17 @@ class Trainer():
         self.results = lf.data_builder.get_predictions_dataframe(self.model, self.test, self.data.test_df)
         return self.results
 
+    def save_evaluation_reports(self)-> None :
+        """
+        Save all the reports in FIGURE_DIR and return it as a string.
+        """
+        if( not self.results) : self.evaluate()
+        self.print_classification_report(show=False, save=True)
+        self.display_history_graphs(show=False, save=True)
+        self.display_confusion_matrix(show=False, save=True)
+        self.display_samples(nb=3,show=False, save=True)
+        self.display_samples(nb=6, gradcam=True, guidedGrad_cam=True, segmented=False, show=False, save=True)
+        self.display_samples(nb=6, gradcam=True, guidedGrad_cam=True, segmented=True, show=False, save=True)
 
     def print_classification_report(self, save=False, show =True) -> str:
         """
