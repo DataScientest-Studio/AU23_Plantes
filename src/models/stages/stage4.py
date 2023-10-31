@@ -26,18 +26,18 @@ class Stage4(lm.models.Trainer):
     def __init__(self, data_wrapper):
         super().__init__(data_wrapper)
         x = self.base_model.model.output
-        x = Conv2D(128, (6, 6), activation='relu', padding='same', kernel_regularizer= l2(0.001))(x),
-        x = BatchNormalization()(x),
-        x = Conv2D(32, (5, 5), activation='relu', padding='same', kernel_regularizer=l2(0.001))(x),
-        x = BatchNormalization()(x),
-        x = Conv2D(64, (4, 4), activation='relu', padding='same', kernel_regularizer=l2(0.001))(x),
-        x = BatchNormalization()(x),
-        x = MaxPooling2D(2, 2)(x),
-        x = Conv2D(256, (3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.001))(x),
-        x = BatchNormalization()(x),
-        x = MaxPooling2D(2, 2)(x),
-        x = Flatten()(x),
-        x = Dense(512, activation='relu', kernel_regularizer=l2(0.001))(x),
+        x = Conv2D(128, (6, 6), activation='relu', padding='same', kernel_regularizer= l2(0.001))(x)
+        x = BatchNormalization()(x)
+        x = Conv2D(32, (5, 5), activation='relu', padding='same', kernel_regularizer=l2(0.001))(x)
+        x = BatchNormalization()(x)
+        x = Conv2D(64, (4, 4), activation='relu', padding='same', kernel_regularizer=l2(0.001))(x)
+        x = BatchNormalization()(x)
+        x = MaxPooling2D(2, 2)(x)
+        x = Conv2D(256, (3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.001))(x)
+        x = BatchNormalization()(x)
+        x = MaxPooling2D(2, 2)(x)
+        x = Flatten()(x)
+        x = Dense(512, activation='relu', kernel_regularizer=l2(0.001))(x)
         x = Dropout(0.5)(x)
         output = Dense(12, activation='softmax', name='main')(x)
         self.model = Model(inputs=self.base_model.model.input, outputs=output)
