@@ -9,6 +9,7 @@ from skimage.morphology import closing
 from skimage.morphology import disk 
 import numpy as np
 import pandas as pd
+import os
 
 import tensorflow as tf
 from tensorflow import keras
@@ -50,13 +51,13 @@ class Trainer():
     epoch1: int = 12 #12
     lr1: float = 1e-3
     # used for 2 rounds fine tuning
-    epoch2: int = 10 #30
+    epoch2: int = 30 #30
     lr2: float = lr1*1e-1
 
     lr_reduction = ReduceLROnPlateau(monitor='val_loss', factor=0.1, min_delta=1e-3,
-                                     patience=2,#tf.math.ceil(epoch1/10),
+                                     patience=3,#tf.math.ceil(epoch1/10),
                                      verbose=1),
-    stop_callback = EarlyStopping(monitor='val_loss', patience=3, #tf.math.ceil(epoch1/5),
+    stop_callback = EarlyStopping(monitor='val_loss', patience=5, #tf.math.ceil(epoch1/5),
                                   restore_best_weights=True, verbose=1)
 
     batch_size = 32
@@ -105,7 +106,9 @@ class Trainer():
         return [model_file, history1_file, history2_file]
 
     def save_fig(self, plot: matplotlib.pyplot, name: str):
-        plot.savefig(f"{FIGURE_DIR}/{self.campaign_id}/{self.record_name}_{name}")
+        path = f"{FIGURE_DIR}/{self.campaign_id}/{self.record_name}_{name}"
+        print(f"Saving figure to {path}")
+        plot.savefig(path, bbox_inches='tight')
         
 
     def get_filenames(self):
@@ -123,11 +126,15 @@ class Trainer():
         """
         history1_file, history2_file, model_file = self.get_filenames()
         self.model = keras.models.load_model(model_file)
+        print('++++++model+++',end='')
         with open(history1_file, 'rb') as f:
             self.history1 = pickle.load(f)
-        if (self.history2):
+        print('+++history1+++', end='')
+        if os.path.exists(history2_file):
             with open(history2_file, 'rb') as f:
                 self.history2 = pickle.load(f)
+            print('+++history2+++')
+        else: print('')
 
     def print_step(self, step_name: str) -> str:
         print(f">>> {self.record_name} –– {step_name}")
@@ -175,20 +182,22 @@ class Trainer():
             self.print_step("Loading")
             self.deserialize()
 
-    def make_trainable_base_model_last_layers(self, nb_layer: int = 10):
+    def make_trainable_base_model_last_layers(self, layer_percent: int = 10):
         """
-        Makes the last `nb_layer` layers of the base model trainable.
+        Makes the last `layer_percent` layers of the base model trainable.
         Avoid making trainable the Normallization layers
         Args:
-            nb_layer (int): The number of last layers to make trainable. Defaults to 10.
+            layer_percent (int): The percent of last layers to make trainable. Defaults to 10.
 
         Returns:
             None
         """
         self.base_model.model.trainable = True
+        nb_layers = round(layer_percent / 100 * len(self.base_model.model.layers))
+        print(f"  –– train last {nb_layers} layers")
         for layer in self.base_model.model.layers:
             layer.trainable = True
-        for layer in self.base_model.model.layers[:-10]:
+        for layer in self.base_model.model.layers[:-nb_layers]:
             if not ('Normalization' in str(type(self.base_model.model.layers[-1]))):
                 layer.trainable = False
 
@@ -200,7 +209,7 @@ class Trainer():
         """
         raise NotImplementedError("process_training must be implemented")   
 
-    def compile_fit(self, lr: float, epochs: int):
+    def compile_fit(self, lr: float, epochs: int, is_fine_tuning: bool = False):
         """
                 Train the model and keep trace of history
                 The model can then be serialized
@@ -215,7 +224,7 @@ class Trainer():
             metrics=CategoricalAccuracy()
         )
 
-        self.history1 = self.model.fit(
+        history = self.model.fit(
             self.train,
             validation_data=self.validation,
             epochs=epochs,
@@ -223,6 +232,9 @@ class Trainer():
             class_weight=self.data.weights,
             callbacks=[self.lr_reduction, self.stop_callback]
         ).history
+
+        if (is_fine_tuning) : self.history2 = history
+        else : self.history1 = history
 
 
     def single_prediction(self, path: str) -> str:
@@ -258,40 +270,44 @@ class Trainer():
         Save all the reports in FIGURE_DIR and return it as a string.
         """
         if( not self.results) : self.evaluate()
-        self.print_classification_report(show=False, save=True)
-        self.display_history_graphs(show=False, save=True)
-        self.display_confusion_matrix(show=False, save=True)
-        self.display_samples(nb=3,show=False, save=True)
-        self.display_samples(nb=6, gradcam=True, guidedGrad_cam=True, segmented=False, show=False, save=True)
-        self.display_samples(nb=6, gradcam=True, guidedGrad_cam=True, segmented=True, show=False, save=True)
+        self.print_classification_report( save=True)
+        self.display_history_graphs( save=True)
+        self.display_confusion_matrix(save=True)
+        self.display_samples(nb=3,save=True)
+        self.display_samples(nb=6, gradcam=True, guidedGrad_cam=True, segmented=False,  save=True)
+        self.display_samples(nb=6, gradcam=True, guidedGrad_cam=True, segmented=True,  save=True)
 
-    def print_classification_report(self, save=False, show =True) -> str:
+    def print_classification_report(self, save=False) -> str:
         """
         Print the classification report and return it as a string.
         """
         self.print_step("Classification Report")
         cr = classification_report(self.results.actual, self.results.predicted)
-        if (show) : print(cr)
         if (save) :
             fig, ax = plt.subplots(figsize=(6, 3))
+            font = plt.rcParams["font.family"]
+            plt.rcParams["font.family"] = "monospace"
             ax.axis('off')
-            ax.text(0, 3, cr, horizontalalignment='left', verticalalignment='center',
-                    fontsize=12, transform=ax.transAxes)
+            titled_cr = f"                   {self.record_name} – Classification Report\n\n{cr}"
+            ax.text(0, 3, titled_cr, horizontalalignment='left', verticalalignment='center',
+                    fontsize=11, transform=ax.transAxes)
             self.save_fig(plt,"classification_report.png")
+            plt.rcParams["font.family"] = font
+        else : print(cr)
         return cr
 
-    def display_history_graphs(self, save=False, show =True) -> None:
+    def display_history_graphs(self, save=False) -> None:
         """
         Display the graphs of the training and validation history.
         """
         self.print_step("Display training history graphs")
-        plot = lv.graphs.plot_history_graph(self.history1, self.history2, self.record_name, show =show)
-        self.save_fig(plot, "history_graph.png")
+        plot = lv.graphs.plot_history_graph(self.history1, self.history2, self.record_name, show=(not save))
+        if (save): self.save_fig(plot, "history_graph.png")
 
 
     def display_samples(self, nb: int, include_true_pred = True, 
                         include_false_pred = True, gradcam: bool = False, 
-                        segmented:bool=False, guidedGrad_cam : bool =False, save=False, show =True) -> None :
+                        segmented:bool=False, guidedGrad_cam : bool =False, save=False) -> None :
         """
         Display training data samples with gradcam if gradcam is True.
 
@@ -310,8 +326,8 @@ class Trainer():
         if (not include_true_pred and  include_false_pred): results = results[results['Same']==False]
         if gradcam :
             plot = lv.graphs.display_results(results, nb=nb, record_name=self.record_name, gradcam=True, model=self.model,
-                        base_model_wrapper=self.base_model, img_size=self.img_size, segmented=segmented, guidedGrad_cam=guidedGrad_cam, show=show)
-        else : plot = lv.graphs.display_results(results, nb=nb, record_name=self.record_name, show=show)
+                        base_model_wrapper=self.base_model, img_size=self.img_size, segmented=segmented, guidedGrad_cam=guidedGrad_cam, show=(not save))
+        else : plot = lv.graphs.display_results(results, nb=nb, record_name=self.record_name, show=(not save))
         if (save) :
             endstr = ''
             if segmented: endstr += '_segmented'
@@ -319,7 +335,7 @@ class Trainer():
             if guidedGrad_cam: endstr += '_guidedGradcam'
             self.save_fig(plot, f"sample_graphs{endstr}.png")
 
-    def display_confusion_matrix(self, save = False, show = True) -> None:
+    def display_confusion_matrix(self, save = False) -> None:
         """
        This function display the confusion matrix for the results of the model.
        It uses the `plot_confusion_matrix` function from the `lv.graphs` module to plot the matrix.
@@ -331,7 +347,7 @@ class Trainer():
         - None
         """
         self.print_step("Display confusion matrix")
-        plot = lv.graphs.plot_confusion_matrix(self.results, self.record_name, show = show)
+        plot = lv.graphs.plot_confusion_matrix(self.results, self.record_name, show = (not save))
         if (save) :
             self.save_fig(plot, f"confusion_matrix.png")
 

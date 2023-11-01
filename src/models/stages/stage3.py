@@ -35,7 +35,7 @@ class Stage3(lm.models.Trainer):
         self.compile_fit(lr=self.lr1, epochs=self.epoch1)
 
         self.make_trainable_base_model_last_layers(10)
-        self.compile_fit(lr=self.lr2, epochs=self.epoch2)
+        self.compile_fit(lr=self.lr2, epochs=self.epoch2, is_fine_tuning=True)
 
 
 
