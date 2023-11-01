@@ -48,10 +48,10 @@ class Trainer():
         fill_mode="nearest",
     )
 
-    epoch1: int = 1 #12
+    epoch1: int = 12 #12
     lr1: float = 1e-3
     # used for 2 rounds fine tuning
-    epoch2: int = 1 #30
+    epoch2: int = 30 #30
     lr2: float = lr1*1e-1
 
     lr_reduction = ReduceLROnPlateau(monitor='val_loss', factor=0.1, min_delta=1e-3,

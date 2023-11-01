@@ -27,7 +27,7 @@ campaign= lm.campaign.Campaign(campaign_id='test', data_wrapper=data_wrapper, mo
 #### train
 #### models will be serialized in RECORD_DIR (launch only once by campaign)
 
-#campaign.train_all()
+campaign.train_all()
 
 
 #### evaluate
