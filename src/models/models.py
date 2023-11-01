@@ -48,10 +48,10 @@ class Trainer():
         fill_mode="nearest",
     )
 
-    epoch1: int = 12 #12
+    epoch1: int = 1 #12
     lr1: float = 1e-3
     # used for 2 rounds fine tuning
-    epoch2: int = 30 #30
+    epoch2: int = 1 #30
     lr2: float = lr1*1e-1
 
     lr_reduction = ReduceLROnPlateau(monitor='val_loss', factor=0.1, min_delta=1e-3,
@@ -284,16 +284,16 @@ class Trainer():
         self.print_step("Classification Report")
         cr = classification_report(self.results.actual, self.results.predicted)
         if (save) :
-            fig, ax = plt.subplots(figsize=(6, 3))
+            fig, ax = plt.subplots(figsize=(6, 2))
             font = plt.rcParams["font.family"]
             plt.rcParams["font.family"] = "monospace"
             ax.axis('off')
             titled_cr = f"                   {self.record_name} – Classification Report\n\n{cr}"
-            ax.text(0, 3, titled_cr, horizontalalignment='left', verticalalignment='center',
+            ax.text(0, 2, titled_cr, horizontalalignment='left', verticalalignment='center',
                     fontsize=11, transform=ax.transAxes)
             self.save_fig(plt,"classification_report.png")
             plt.rcParams["font.family"] = font
-        else : print(cr)
+        else: print(cr)
         return cr
 
     def display_history_graphs(self, save=False) -> None:
@@ -302,7 +302,7 @@ class Trainer():
         """
         self.print_step("Display training history graphs")
         plot = lv.graphs.plot_history_graph(self.history1, self.history2, self.record_name, show=(not save))
-        if (save): self.save_fig(plot, "history_graph.png")
+        if save: self.save_fig(plot, "history_graph.png")
 
 
     def display_samples(self, nb: int, include_true_pred = True, 

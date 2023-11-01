@@ -1,61 +1,36 @@
 
 import src.features as lf
 import src.models as lm
-import src.visualization as lv
 from src.models.stages import *
+
+
+#### Directories
 lm.models.RECORD_DIR='../models/records'
 lm.models.FIGURE_DIR='../reports/figures'
-import tensorflow as tf
 
 #### Data building
 data_wrapper = lf.data_builder.create_dataset_from_directory('../data/v2-plant-seedlings-dataset/')
 
-#### Train Campaigns
-campaign_id='test'
+#### Campaign init
+models = [
+  stage1.Stage1MobileNetv3,
+  stage1.Stage1ResNetv2,
+  stage2.Stage2MobileNetv3,
+  stage2.Stage2ResNetv2,
+  stage3.Stage3MobileNetv3,
+  stage3.Stage3ResNetv2,
+  stage4.Stage4MobileNetv3,
+  stage4.Stage4ResNetv2
+  ]
+campaign= lm.campaign.Campaign(campaign_id='test', data_wrapper=data_wrapper, models=models)
 
-#### Stage 1
-stage1_mobilenet = stage1.Stage1MobileNetv3(data_wrapper, campaign_id)
-stage1_mobilenet.fit_or_load( training=True)
-tf.keras.backend.clear_session()
+#### train
+#### models will be serialized in RECORD_DIR (launch only once by campaign)
 
-stage1_resnet = stage1.Stage1ResNetv2(data_wrapper, campaign_id)
-stage1_resnet.fit_or_load( training=True)
-tf.keras.backend.clear_session()
-
-#### Stage2
-
-stage2_mobilenet = stage2.Stage2MobileNetv3(data_wrapper, campaign_id)
-stage2_mobilenet.fit_or_load( training=True)
-tf.keras.backend.clear_session()
-
-stage2_resnet = stage2.Stage2ResNetv2(data_wrapper, campaign_id)
-stage2_resnet.fit_or_load( training=True)
-tf.keras.backend.clear_session()
-
-#### Stage3
-
-stage3_mobilenet = stage3.Stage3MobileNetv3(data_wrapper, campaign_id)
-stage3_mobilenet.fit_or_load( training=True)
-tf.keras.backend.clear_session()
-
-stage3_resnet = stage3.Stage3ResNetv2(data_wrapper, campaign_id)
-stage3_resnet.fit_or_load( training=True)
-tf.keras.backend.clear_session()
+#campaign.train_all()
 
 
-stage4_mobilenet = stage4.Stage4MobileNetv3(data_wrapper, campaign_id)
-stage4_mobilenet.fit_or_load(training=True)
-tf.keras.backend.clear_session()
+#### evaluate
+#### models will be loaded and results saved in FIGURE_DIR/campaign_id
 
-stage4_resnet = stage4.Stage4ResNetv2(data_wrapper, campaign_id)
-stage4_resnet.fit_or_load( training=True)
-tf.keras.backend.clear_session()
-
-#stage1_mobilenet.evaluate()
-#stage1_mobilenet.print_classification_report()
-#stage1_mobilenet.display_history_graphs()
-#stage1_mobilenet.display_confusion_matrix()
-#stage1_mobilenet.display_samples(nb=3)
-#stage1_mobilenet.display_samples(nb=6, gradcam=True)
-
-
+campaign.evaluate_and_build_reports()

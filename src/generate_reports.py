@@ -3,11 +3,10 @@ import src.features as lf
 import src.models as lm
 import src.visualization as lv
 from src.models.stages import *
+import tensorflow as tf
 lm.models.RECORD_DIR='../models/records'
 lm.models.FIGURE_DIR='../reports/figures'
-import tensorflow as tf
 
-#### Data building
 data = lf.data_builder.create_dataset_from_directory('../data/v2-plant-seedlings-dataset/')
 
 campaign_id='test'
@@ -22,17 +21,32 @@ models = [
   stage4.Stage4ResNetv2
   ]
 
-#train all
-if (False) :
+active_models = []
+
+def train_all() :
+    """
+    train all the models in the list
+    do not keep reference on them to free memory between each
+    :return:
+    """
     for model in models:
         m= model(data, campaign_id)
         m.fit_or_load(training=True)
+        tf.keras.backend.clear_session()
 
 
-#save reports
-if (True) :
+def evaluate_and_build_reports() :
     for model in models:
         m= model(data, campaign_id)
         m.fit_or_load(training=False)
         m.save_evaluation_reports()
-        tf.keras.backend.clear_session()
+        active_models.append(m)
+    lv.graphs.compare_models_confusions(active_models, save=True, fig_dir=lm.models.FIGURE_DIR)
+    lv.graphs.compare_models_performances(active_models, save=True, fig_dir=lm.models.FIGURE_DIR)
+
+
+
+
+
+
+

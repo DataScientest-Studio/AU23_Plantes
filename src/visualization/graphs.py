@@ -15,6 +15,10 @@ import seaborn as sns
 import tensorflow.keras as keras
 from keras.models import Model
 
+import plotly.express as px
+import plotly.io as pio
+
+
 
 def plot_history_graph(history1: dict, history2: dict = None, record_name: str = None, show=True) -> plt:
     """
@@ -166,26 +170,78 @@ def display_results(results: pd.DataFrame, nb: int = 15, gradcam: bool = False, 
     return plt
 
 
+def compare_models_confusions(active_models: list, save: bool = False, fig_dir : str = '0notdefined') -> None:
     """
-    results_df = results.reset_index(drop=True)
-    fig = plt.figure(figsize=(20, 20))
-    n = 0
-    for i in range(nb):
-        plt.axis('off')
-        n += 1
-        plt.subplot(math.ceil(16 / 3), 3, n)
-        plt.subplots_adjust(hspace=0.5, wspace=0.3)
-        if gradcam:
-            image = lf.data_builder.gradCAMImage(f"{results_df.filename[i]}", img_size, model, base_model_wrapper )
-        else:
-            image = lf.data_builder.readImage(f"{results_df.filename[i]}")
-        plt.imshow(image)
-        plt.title(f'{results_df.actual[i]} \n Pred: {results_df.predicted[i]}', fontsize='medium')
-    if record_name:
-        if gradcam:
-            fig.suptitle(f"{record_name} – Result Samples with GradCAM", fontsize="x-large")
-        else:
-            fig.suptitle(f"{record_name} – Result Samples", fontsize="x-large")
-    plt.show()
-    """
+    Compare the confusion matrices of multiple models and plot the results.
 
+    Parameters:
+    - active_models (list): A list of active models to compare.
+    - save (bool, optional): Whether to save the generated plot. Defaults to False.
+    - fig_dir (str, optional): The path to save the plot if save is True. Defaults to '0notdefined'.
+
+    Returns:
+    None
+    """
+    data = active_models[0].data
+    campaign_id= active_models[0].campaign_id
+    confusions_df = pd.DataFrame(columns=['actual', 'count', 'confusion', 'model'])
+    max = 0
+    for m in active_models:
+        cf = confusion_matrix(m.results.actual, m.results.predicted)
+        for i in range(cf.shape[0]):
+            for j in range(cf.shape[1]):
+                if i == j:
+                    count = 0
+                else:
+                    count = cf[i][j]
+                if count > max: max = count
+                confusions_df.loc[len(confusions_df)] = {
+                    'actual': data.classes[i], 'count': count, 'confusion': data.classes[j], 'model': m.record_name
+                }
+    fig = px.bar(confusions_df, y='count', x='actual', animation_frame='model', color='confusion')
+    fig.update_layout(yaxis=dict(range=[0, max + 2]))
+    fig.layout.updatemenus[0].buttons[0].args[1]['frame']['duration'] = 3000
+    fig.layout.updatemenus[0].buttons[0].args[1]['transition']['duration'] = 800
+    fig.update_layout(title=f"class confusion evolution between models –– {campaign_id} campaign")
+    if save : pio.write_html(fig, f"{fig_dir}/{campaign_id}/compare_confusions.html", auto_open=False)
+    else : fig.show()
+
+
+def compare_models_performances(active_models: list, save: bool = False, fig_dir : str = '0notdefined') -> None:
+    """
+    Compare the performances of multiple models and plot the results.
+
+    Parameters:
+    - active_models (list): A list of active models to compare.
+    - save (bool, optional): Whether to save the generated plot. Defaults to False.
+    - fig_dir (str, optional): The path to save the plot if save is True. Defaults to '0notdefined'.
+
+    Returns:
+    None
+    """
+    epoch1 = active_models[0].epoch1
+    campaign_id= active_models[0].campaign_id
+    epoch_evolution = pd.DataFrame(columns=['model', 'epochs', 'loss', 'accuracy', 'val_loss', 'val_accuracy'])
+    for m in active_models:
+        for i in range(len(m.history1['loss'])):
+            epoch_evolution.loc[len(epoch_evolution)] = {
+                'model': m.record_name, 'epochs': i + 1, 'loss': m.history1['loss'][i],
+                'accuracy': m.history1['categorical_accuracy'][i], 'val_loss': m.history1['val_loss'][i],
+                'val_accuracy': m.history1['val_categorical_accuracy'][i]
+            }
+        if m.history2:
+            for i in range(len(m.history2['loss'])):
+                epoch_evolution.loc[len(epoch_evolution)] = {
+                    'model': m.record_name, 'epochs': i + epoch1 + 1, 'loss': m.history2['loss'][i],
+                    'accuracy': m.history2['categorical_accuracy'][i], 'val_loss': m.history2['val_loss'][i],
+                    'val_accuracy': m.history2['val_categorical_accuracy'][i]
+                }
+    for metric in ['loss', 'accuracy', 'val_loss', 'val_accuracy']:
+        plt.figure(figsize=(20, 10))
+        fig = px.line(data_frame=epoch_evolution, x='epochs', y=metric, color='model')
+        fig.add_vline(x=epoch1, line_width=2, line_dash="dash", line_color="red")
+        fig.update_layout(title=f"{metric} evolution between models –– {campaign_id} campaign")
+        if save:
+            pio.write_html(fig, f"{fig_dir}/{campaign_id}/compare_performances_{metric}.html", auto_open=False)
+        else:
+            fig.show()
