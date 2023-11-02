@@ -26,19 +26,21 @@ class Stage4(lm.models.Trainer):
     def __init__(self, data_wrapper, campaign_id):
         super().__init__(data_wrapper, campaign_id)
         x = self.base_model.model.output
-        x = Conv2D(128, (6, 6), activation='relu', padding='same', kernel_regularizer= l2(0.001))(x)
-        x = BatchNormalization()(x)
-        x = Conv2D(32, (5, 5), activation='relu', padding='same', kernel_regularizer=l2(0.001))(x)
-        x = BatchNormalization()(x)
-        x = Conv2D(64, (4, 4), activation='relu', padding='same', kernel_regularizer=l2(0.001))(x)
-        x = BatchNormalization()(x)
-        x = MaxPooling2D(2, 2)(x)
-        x = Conv2D(256, (3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.001))(x)
-        x = BatchNormalization()(x)
-        x = MaxPooling2D(2, 2)(x)
-        x = Flatten()(x)
+        # x = Conv2D(128, (6, 6), activation='relu', padding='same', kernel_regularizer= l2(0.001))(x)
+        # x = BatchNormalization()(x)
+        # x = Conv2D(32, (5, 5), activation='relu', padding='same', kernel_regularizer=l2(0.001))(x)
+        # x = BatchNormalization()(x)
+        # x = Conv2D(64, (4, 4), activation='relu', padding='same', kernel_regularizer=l2(0.001))(x)
+        # x = BatchNormalization()(x)
+        # x = MaxPooling2D(2, 2)(x)
+        # x = Conv2D(256, (3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.001))(x)
+        # x = BatchNormalization()(x)
+        x = GlobalAveragePooling2D()(x)
+        # x = Flatten()(x)
         x = Dense(512, activation='relu', kernel_regularizer=l2(0.001))(x)
-        x = Dropout(0.5)(x)
+        x = Dropout(0.2)(x)
+        x = Dense(256, activation='relu', kernel_regularizer=l2(0.001))(x)        
+        x = Dropout(0.2)(x)
         output = Dense(12, activation='softmax', name='main')(x)
         self.model = Model(inputs=self.base_model.model.input, outputs=output)
 
@@ -46,7 +48,7 @@ class Stage4(lm.models.Trainer):
         self.base_model.model.trainable = False
         self.compile_fit(lr=self.lr1, epochs=self.epoch1)
 
-        self.make_trainable_base_model_last_layers(10)
+        self.make_trainable_base_model_last_layers(50)
         self.compile_fit(lr=self.lr2, epochs=self.epoch2, is_fine_tuning=True)
 
 
