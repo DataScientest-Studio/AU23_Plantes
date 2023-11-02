@@ -19,8 +19,6 @@ st.set_page_config(
     page_title="FloraFlow",
     page_icon="🌱"
 )
-if 'source_image' not in st.session_state:
-    st.session_state['source_image'] = None
 
 # FONCTIONS
 def distribution_des_classes(data):
@@ -82,6 +80,7 @@ def reset_state():
     st.session_state['classe_predite'] = None
     st.session_state['resultat'] = None
     st.session_state['id_classe_predite'] = None
+    st.session_state['source_image'] = None
 
 # CSS FICTIF
 color_palette = px.colors.sequential.speed
@@ -494,8 +493,13 @@ if choose == "Utilisation du modèle":
             st.session_state['classe_predite'] = [name for name, id in class_mapping.items() if id == st.session_state['id_classe_predite']][0]
             time.sleep(3)  
             progress_bar.progress(0)
-  
-    if st.session_state['classe_predite'] is not None and st.session_state['resultat'] is not None and not st.session_state['feedback_soumis']:
+    if (st.session_state.get('source_image') != 'url'):
+        if (st.session_state['classe_predite'] is not None and st.session_state['resultat'] is not None): 
+            with feedback_placeholder.container():
+                st.markdown(f"Selon le modèle, il s'agit de l'espèce **{st.session_state['classe_predite']}** avec une précision de : **{st.session_state['resultat'][0][st.session_state['id_classe_predite']]*100:.2f}%**")
+                reset_state()
+
+    if (st.session_state['classe_predite'] is not None and st.session_state['resultat'] is not None and not st.session_state['feedback_soumis'] and st.session_state.get('source_image') == 'url'):
         with feedback_placeholder.container():
             st.markdown(f"Selon le modèle, il s'agit de l'espèce **{st.session_state['classe_predite']}** avec une précision de : **{st.session_state['resultat'][0][st.session_state['id_classe_predite']]*100:.2f}%**")
             col1, col2 = st.columns(2)
