@@ -19,6 +19,8 @@ st.set_page_config(
     page_title="FloraFlow",
     page_icon="🌱"
 )
+if 'source_image' not in st.session_state:
+    st.session_state['source_image'] = None
 
 # FONCTIONS
 def distribution_des_classes(data):
@@ -62,6 +64,24 @@ def preprocess_image(image, target_size=(150, 150)):
         image_np = img_prep.img_to_array(image) / 255.0  # Rescale
         image_np = np.expand_dims(image_np, axis=0)
         return image_np
+
+def enregistrer_feedback_pandas(url, classe_predite, bonne_classe):
+    file_path = os.path.join('src', 'streamlit', 'fichiers', 'feedback', 'feedback.csv')
+    df = pd.DataFrame([[url, classe_predite, bonne_classe]], columns=['URL', 'Classe Predite', 'Bonne Classe'])
+    if os.path.isfile(file_path):
+        df_existante = pd.read_csv(file_path)
+        df_finale = pd.concat([df_existante, df], ignore_index=True)
+    else:
+        df_finale = df
+    df_finale.to_csv(file_path, index=False)
+    st.success('Feedback enregistré avec succès !')
+
+def reset_state():
+    st.session_state['feedback_soumis'] = False
+    st.session_state['mauvaise_pred'] = False
+    st.session_state['classe_predite'] = None
+    st.session_state['resultat'] = None
+    st.session_state['id_classe_predite'] = None
 
 # CSS FICTIF
 color_palette = px.colors.sequential.speed
@@ -417,6 +437,7 @@ if choose == "Utilisation du modèle":
             w_percent = base_width / float(image.size[0])
             h_size = int(float(image.size[1]) * float(w_percent))
             resized_image = image.resize((base_width, h_size), Image.ANTIALIAS)
+            st.session_state['source_image'] = 'url'
 
             col1, col2 = st.columns(2)
             with col1:
@@ -447,27 +468,59 @@ if choose == "Utilisation du modèle":
         st.write("##### Aperçu de l'image à prédire")
         st.image(image, use_column_width=True)
     
-    classe_predite = None
-    result = None
-    id_classe_predite = None
+    if 'classe_predite' not in st.session_state:
+        st.session_state['classe_predite'] = None
+    if 'resultat' not in st.session_state:
+        st.session_state['resultat'] = None
+    if 'id_classe_predite' not in st.session_state:
+        st.session_state['id_classe_predite'] = None
+    if "mauvaise_pred" not in st.session_state:
+        st.session_state['mauvaise_pred'] = False
+    if 'feedback_soumis' not in st.session_state:
+        st.session_state['feedback_soumis'] = False
+    
+    feedback_placeholder = st.empty()
+
     col1, col2, col3 = st.columns([1,1,1])
-    with col2 : 
+    with col2:
         if st.button("Prédiction", use_container_width=True) and image is not None:
             processed_image = preprocess_image(image)
-            
-            progress_bar.progress(0.3)  
-            
-            result = modele.predict(processed_image)
-            progress_bar.progress(1.0)  
-
-            id_classe_predite = np.argmax(result[0])
+            progress_bar = st.progress(0)
+            progress_bar.progress(0.3)
+            st.session_state['resultat'] = modele.predict(processed_image)
+            progress_bar.progress(1.0)
+            st.session_state['id_classe_predite'] = np.argmax(st.session_state['resultat'][0])
             class_mapping = {'Black-grass': 0, 'Charlock': 1, 'Cleavers': 2, 'Common Chickweed': 3, 'Common wheat': 4, 'Fat Hen': 5, 'Loose Silky-bent': 6, 'Maize': 7, 'Scentless Mayweed': 8, "Shepherd's Purse": 9, 'Small-flowered Cranesbill': 10, 'Sugar beet': 11}
-            classe_predite = [name for name, id in class_mapping.items() if id == id_classe_predite][0]
-            time.sleep(3)
+            st.session_state['classe_predite'] = [name for name, id in class_mapping.items() if id == st.session_state['id_classe_predite']][0]
+            time.sleep(3)  
             progress_bar.progress(0)
-    if classe_predite is not None and result is not None and id_classe_predite is not None:
-        st.markdown(f"<div style='text-align: center'>Selon le modèle, il s'agit de l'espèce <b>{classe_predite}</b> avec une précision de : <b>{result[0][id_classe_predite]*100:.2f}%</b></div>", unsafe_allow_html=True)
+  
+    if st.session_state['classe_predite'] is not None and st.session_state['resultat'] is not None and not st.session_state['feedback_soumis']:
+        with feedback_placeholder.container():
+            st.markdown(f"Selon le modèle, il s'agit de l'espèce **{st.session_state['classe_predite']}** avec une précision de : **{st.session_state['resultat'][0][st.session_state['id_classe_predite']]*100:.2f}%**")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Correcte"):
+                    enregistrer_feedback_pandas(url, st.session_state['classe_predite'], st.session_state['classe_predite'])
+                    reset_state()
+                    feedback_placeholder.empty()
+            with col2:
+                if st.button("Incorrecte"):
+                    st.session_state['mauvaise_pred'] = True
 
-   
+    if st.session_state['mauvaise_pred']:
+        with feedback_placeholder.container():
+            especes = list(data['Classe'].unique())
+            bonne_classe = st.multiselect("Précisez la bonne classe :", especes)
+            if st.button('Confirmer la classe'):
+                if bonne_classe:
+                    enregistrer_feedback_pandas(url, st.session_state['classe_predite'], bonne_classe[0])
+                    time.sleep(3)
+                    feedback_placeholder.empty()
+                    reset_state()
+                else:
+                    st.error("Veuillez sélectionner une classe avant de confirmer.")
+
+
 if choose == "Conclusion":
     st.write("### Conclusion")
