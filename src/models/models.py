@@ -54,10 +54,10 @@ class Trainer():
     epoch2: int = 30 #30
     lr2: float = lr1*1e-1
 
-    lr_reduction = ReduceLROnPlateau(monitor='val_loss', factor=0.1, min_delta=1e-3,
+    lr_reduction = ReduceLROnPlateau(monitor='val_loss', factor=0.1, # min_delta=1e-3,
                                      patience=3,#tf.math.ceil(epoch1/10),
                                      verbose=1),
-    stop_callback = EarlyStopping(monitor='val_loss', patience=5, #tf.math.ceil(epoch1/5),
+    stop_callback = EarlyStopping(monitor='val_loss', patience=10, # min_delta=5e-3,#tf.math.ceil(epoch1/5),
                                   restore_best_weights=True, verbose=1)
 
     batch_size = 32
@@ -194,7 +194,7 @@ class Trainer():
         """
         self.base_model.model.trainable = True
         nb_layers = round(layer_percent / 100 * len(self.base_model.model.layers))
-        print(f"  –– train last {nb_layers} layers")
+        print(f"train last {nb_layers} layers")
         for layer in self.base_model.model.layers:
             layer.trainable = True
         for layer in self.base_model.model.layers[:-nb_layers]:
