@@ -196,6 +196,17 @@ def readImage(path:str, size:tuple=None) -> np.ndarray:
     img = img/255.
     return img
 
+
+
+def last_conv_layer(model):
+     for layer in reversed(model.layers):
+         if 'Conv' in str(type(layer)) :
+             #print (layer.name)
+             return layer
+     raise ValueError("Couche non trouvée")
+
+
+
 def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model, base_model_wrapper : lm.model_wrapper.BaseModelWrapper) -> np.ndarray:
     """
     Generates a Grad-CAM heatmap for a given input image array using a model.
@@ -208,14 +219,10 @@ def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model, base_mod
     Returns:
         numpy.ndarray: The Grad-CAM heatmap.
     """
-    def get_last_conv_layer_name(model):
-        for layer in reversed(model.layers):
-            if 'conv' in layer.name:
-                return layer
-        raise ValueError("Couche non trouvée")
+
     with tf.GradientTape() as tape:
         img_array = base_model_wrapper.preprocessing(img_array)
-        grad_model = Model(complete_model.input, [complete_model.output, get_last_conv_layer_name(complete_model).output])
+        grad_model = Model(complete_model.input, [complete_model.output, last_conv_layer(complete_model).output])
         preds, last_conv_layer_output = grad_model(img_array)
         pred_index = tf.argmax(preds[0])
         class_channel = preds[:, pred_index]
@@ -288,13 +295,9 @@ def gradCAMImage(img_path :str, img_size : tuple, model : Model,
 
 def guided_backprop(model, img : np.ndarray, upsample_size: tuple[int, int]):
         import cv2 
-        def LAYER(model):
-            for layer in reversed(model.layers):
-                if 'conv' in layer.name:
-                    return layer
-            raise ValueError("Couche non trouvée")
+
         
-        base_model           = Model(model.input, [model.output, LAYER(model).output])
+        base_model           = Model(model.input, [model.output, last_conv_layer(model).output])
         base_model.trainable = True
         
         with tf.GradientTape() as tape:
