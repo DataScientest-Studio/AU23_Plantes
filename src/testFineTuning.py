@@ -90,6 +90,19 @@ class T3(TestTraining):
         self.compile_fit(lr=self.lr2, epochs=self.epoch2, is_fine_tuning=True)
 
 
+
+class T4(TestTraining):
+    record_name = "50NoFineTuning"
+    training_param = False
+
+    def process_training(self):
+        self.base_model.model.trainable = True
+        self.compile_fit(lr=self.lr1, epochs=self.epoch1)
+
+        self.base_model.model.trainable = True
+        self.compile_fit(lr=self.lr2, epochs=self.epoch2, is_fine_tuning=True)
+
+
 #### Campaign init
 models = [
   T1,

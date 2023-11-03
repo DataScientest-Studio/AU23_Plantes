@@ -200,8 +200,8 @@ def readImage(path:str, size:tuple=None) -> np.ndarray:
 
 def last_conv_layer(model):
      for layer in reversed(model.layers):
-         #if 'Conv' in str(type(layer)) :
-         if ('onv' in layer.name):
+         if 'Conv' in str(type(layer)) :
+         #if ('onv' in layer.name):
              print (layer.name)
              return layer
      print("couche gradcam non trouvée - return last layer")
