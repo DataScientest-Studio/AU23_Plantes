@@ -219,11 +219,12 @@ def compare_models_performances(active_models: list, save: bool = False, fig_dir
     Returns:
     None
     """
-    epoch1 = active_models[0].epoch1
+    limit_finetuning = None
     campaign_id= active_models[0].campaign_id
     epoch_evolution = pd.DataFrame(columns=['model', 'epochs', 'loss', 'accuracy', 'val_loss', 'val_accuracy'])
     for m in active_models:
-        for i in range(len(m.history1['loss'])):
+        epoch1 = len(m.history1['loss'])
+        for i in range(epoch1):
             epoch_evolution.loc[len(epoch_evolution)] = {
                 'model': m.record_name, 'epochs': i + 1, 'loss': m.history1['loss'][i],
                 'accuracy': m.history1['categorical_accuracy'][i], 'val_loss': m.history1['val_loss'][i],
@@ -236,10 +237,12 @@ def compare_models_performances(active_models: list, save: bool = False, fig_dir
                     'accuracy': m.history2['categorical_accuracy'][i], 'val_loss': m.history2['val_loss'][i],
                     'val_accuracy': m.history2['val_categorical_accuracy'][i]
                 }
+            limit_finetuning =epoch1
     for metric in ['loss', 'accuracy', 'val_loss', 'val_accuracy']:
         plt.figure(figsize=(20, 10))
         fig = px.line(data_frame=epoch_evolution, x='epochs', y=metric, color='model')
-        fig.add_vline(x=epoch1, line_width=2, line_dash="dash", line_color="red")
+        if limit_finetuning:
+            fig.add_vline(x=limit_finetuning, line_width=2, line_dash="dash", line_color="red")
         fig.update_layout(title=f"{metric} evolution between models –– {campaign_id} campaign")
         if save:
             pio.write_html(fig, f"{fig_dir}/{campaign_id}/compare_performances_{metric}.html", auto_open=False)

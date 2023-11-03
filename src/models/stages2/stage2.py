@@ -32,8 +32,17 @@ class Stage2(lm.models.Trainer):
         self.base_model.model.trainable = False
         self.compile_fit(lr=self.lr1, epochs=self.epoch1)
 
+
+class CNN(Stage2):
+    record_name = "2-noBg-Cnn"
+    def __init__(self, data_wrapper, campaign_id):
+        # set the base model -- must be set before super().__init__()
+        self.base_model = lm.model_wrapper.SimpleCNN(self.img_size)
+        super().__init__(data_wrapper, campaign_id)
+
+
 class MobileNetv3(Stage2):
-    record_name = "2-nobg-Mob"
+    record_name = "2-noBg-Mob"
     def __init__(self, data_wrapper, campaign_id):
         # set the base model -- must be set before super().__init__()
         self.base_model = lm.model_wrapper.MobileNetv3(self.img_size)
@@ -41,7 +50,7 @@ class MobileNetv3(Stage2):
 
 
 class ResNetv2(Stage2):
-    record_name = "2-nobg-Res"
+    record_name = "2-noBg-Res"
 
     def __init__(self, data_wrapper, campaign_id):
         # set the base model -- must be set before super().__init__()

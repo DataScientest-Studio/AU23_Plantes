@@ -39,7 +39,6 @@ class Stage3(lm.models.Trainer):
         self.compile_fit(lr=self.lr2, epochs=self.epoch2, is_fine_tuning=True)
 
 
-
 class MobileNetv3(Stage3):
     record_name = "3-finetuning-Mob"
     def __init__(self, data_wrapper, campaign_id):

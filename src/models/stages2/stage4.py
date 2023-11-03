@@ -28,6 +28,9 @@ class Stage4(lm.models.Trainer):
         super().__init__(data_wrapper, campaign_id)
         x = self.base_model.model.output
         x = GlobalAveragePooling2D()(x)
+        x = Dense(512, activation='relu')(x)
+        x = Dropout(0.2)(x)
+        x = Dense(256, activation='relu')(x)
         x = Dropout(0.2)(x)
         output = Dense(12, activation='softmax', name='main')(x)
         self.model = Model(inputs=self.base_model.model.input, outputs=output)
@@ -37,8 +40,17 @@ class Stage4(lm.models.Trainer):
         self.compile_fit(lr=self.lr1, epochs=self.epoch1+self.epoch2)
 
 
+
+class CNN(Stage4):
+    record_name = "4-dense-Cnn"
+    def __init__(self, data_wrapper, campaign_id):
+        # set the base model -- must be set before super().__init__()
+        self.base_model = lm.model_wrapper.SimpleCNN(self.img_size)
+        super().__init__(data_wrapper, campaign_id)
+
+
 class MobileNetv3(Stage4):
-    record_name = "4-withBatch-Mob"
+    record_name = "4-dense-Mob"
 
     def __init__(self, data_wrapper, campaign_id):
         # set the base model -- must be set before super().__init__()
@@ -46,7 +58,7 @@ class MobileNetv3(Stage4):
         super().__init__(data_wrapper, campaign_id)
 
 class ResNetv2(Stage4):
-    record_name = "4-withBatch-Res"
+    record_name = "4-dense-Res"
 
     def __init__(self, data_wrapper, campaign_id):
         # set the base model -- must be set before super().__init__()

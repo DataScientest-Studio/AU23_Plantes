@@ -185,10 +185,10 @@ class Trainer():
             self.print_step("Loading")
             self.deserialize()
 
-    def make_trainable_base_model_last_layers(self, layer_percent: int = 10):
+    def make_trainable_base_model_last_layers(self, layer_percent: int = 10, remove_normalization :bool = True):
         """
         Makes the last `layer_percent` layers of the base model trainable.
-        Avoid making trainable the Normallization layers
+        Avoid making trainable the Normalization layers
         Args:
             layer_percent (int): The percent of last layers to make trainable. Defaults to 10.
 
@@ -199,9 +199,11 @@ class Trainer():
         nb_layers = round(layer_percent / 100 * len(self.base_model.model.layers))
         print(f"train last {nb_layers} layers")
         for layer in self.base_model.model.layers:
-            layer.trainable = True
+            if (remove_normalization & ('Normalization' in str(type(layer)))):
+                layer.trainable = False
+            else:
+                layer.trainable = True
         for layer in self.base_model.model.layers[:-nb_layers]:
-            # if not ('Normalization' in str(type(self.base_model.model.layers[-1]))):
             layer.trainable = False
 
 

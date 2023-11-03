@@ -36,9 +36,18 @@ class Stage1(lm.models.Trainer):
         self.compile_fit(lr=self.lr1, epochs=self.epoch1)
 
 
+
+class CNN(Stage1):
+    record_name = "1-simple-Cnn"
+    def __init__(self, data_wrapper, campaign_id):
+        # set the base model -- must be set before super().__init__()
+        self.base_model = lm.model_wrapper.SimpleCNN(self.img_size)
+        super().__init__(data_wrapper, campaign_id)
+
+
+
 class MobileNetv3(Stage1):
     record_name = "1-simple-Mob"
-
     def __init__(self, data_wrapper, campaign_id):
         # set the base model -- must be set before super().__init__()
         self.base_model = lm.model_wrapper.MobileNetv3(self.img_size)
