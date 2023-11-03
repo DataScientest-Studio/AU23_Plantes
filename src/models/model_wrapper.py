@@ -33,7 +33,7 @@ class SimpleCNN(BaseModelWrapper):
         self.preprocessing = lambda x: x / 255.
         self.log_name = 'CNN'
 
-        inputs = tf.keras.layers.Input(shape=(None, 224,224,3))
+        inputs = tf.keras.layers.Input(shape=img_size + (3,))
         x = inputs
 
         x = tf.keras.layers.Conv2D(32, (6, 6), activation='relu',
@@ -71,39 +71,42 @@ class SimpleCNN(BaseModelWrapper):
 
 
 class MobileNetv2(BaseModelWrapper):
-    def __init__(self, img_size: tuple) -> None:
+    def __init__(self, img_size: tuple, pooling:str=None) -> None:
         self.preprocessing = tf.keras.applications.mobilenet_v2.preprocess_input
         self.log_name = 'mobilenetv2'
         self.model = tf.keras.applications.MobileNetV2(
             input_shape=img_size + (3,),
             include_top=False,
             alpha=1.0,
-            weights='imagenet'
+            weights='imagenet',
+            pooling=pooling
         )
         self.grad_cam_layer = 'Conv_1'
 
 
 class MobileNetv3(BaseModelWrapper):
-    def __init__(self, img_size: tuple) -> None:
+    def __init__(self, img_size: tuple,pooling:str=None) -> None:
         self.preprocessing = tf.keras.applications.mobilenet_v3.preprocess_input
         self.log_name = 'mobilenetv3'
         self.model = tf.keras.applications.MobileNetV3Large(
             input_shape=img_size + (3,),
             include_top=False,
             alpha=1.0,
-            weights='imagenet'
+            weights='imagenet',
+            pooling=pooling
         )
         self.grad_cam_layer = 'Conv_1'
 
 
 class ResNet50V2(BaseModelWrapper):
-    def __init__(self, img_size: tuple) -> None:
+    def __init__(self, img_size: tuple,pooling:str=None) -> None:
         self.preprocessing = tf.keras.applications.resnet50.preprocess_input
         self.log_name = 'resnetv2'
         self.model = tf.keras.applications.ResNet50(
             input_shape=img_size + (3,),
             include_top=False,
-            weights='imagenet'
+            weights='imagenet',
+            pooling=pooling
         )
         self.grad_cam_layer = 'Conv_1'
 

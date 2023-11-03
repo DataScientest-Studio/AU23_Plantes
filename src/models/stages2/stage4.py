@@ -27,7 +27,6 @@ class Stage4(lm.models.Trainer):
         self.add_background_removal()
         super().__init__(data_wrapper, campaign_id)
         x = self.base_model.model.output
-        x = GlobalAveragePooling2D()(x)
         x = Dense(512, activation='relu')(x)
         x = Dropout(0.2)(x)
         x = Dense(256, activation='relu')(x)
@@ -54,7 +53,7 @@ class MobileNetv3(Stage4):
 
     def __init__(self, data_wrapper, campaign_id):
         # set the base model -- must be set before super().__init__()
-        self.base_model = lm.model_wrapper.MobileNetv3(self.img_size)
+        self.base_model = lm.model_wrapper.MobileNetv3(self.img_size,pooling='avg')
         super().__init__(data_wrapper, campaign_id)
 
 class ResNetv2(Stage4):
@@ -62,5 +61,5 @@ class ResNetv2(Stage4):
 
     def __init__(self, data_wrapper, campaign_id):
         # set the base model -- must be set before super().__init__()
-        self.base_model = lm.model_wrapper.ResNet50V2(self.img_size)
+        self.base_model = lm.model_wrapper.ResNet50V2(self.img_size,pooling='avg')
         super().__init__(data_wrapper, campaign_id)

@@ -226,6 +226,7 @@ def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model, base_mod
     with tf.GradientTape() as tape:
         img_array = base_model_wrapper.preprocessing(img_array)
         grad_model = Model(complete_model.input, [complete_model.output, last_conv_layer(complete_model).output])
+        #grad_model = Model(complete_model.input, [complete_model.output, complete_model.get_layer(base_model_wrapper.grad_cam_layer).output])
         preds, last_conv_layer_output = grad_model(img_array)
         pred_index = tf.argmax(preds[0])
         class_channel = preds[:, pred_index]
