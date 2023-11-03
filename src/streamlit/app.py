@@ -4,6 +4,9 @@ import requests
 import os
 import pandas as pd
 import numpy as np
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
 import plotly.express as px
 from PIL import Image
 from io import BytesIO
@@ -68,9 +71,9 @@ def preprocess_image(image, target_size=(150, 150)):
         image_np = np.expand_dims(image_np, axis=0)
         return image_np
 
-def enregistrer_feedback_pandas(url, classe_predite, bonne_classe):
+def enregistrer_feedback_pandas(url, classe_predite, bonne_classe, nom_modele):
     file_path = os.path.join('src', 'streamlit', 'fichiers', 'feedback', 'feedback.csv')
-    df = pd.DataFrame([[url, classe_predite, bonne_classe]], columns=['URL', 'Classe Predite', 'Bonne Classe'])
+    df = pd.DataFrame([[url, classe_predite, bonne_classe, nom_modele]], columns=['URL', 'Classe Predite', 'Bonne Classe', 'Modèle Utilisé'])
     if os.path.isfile(file_path):
         df_existante = pd.read_csv(file_path)
         df_finale = pd.concat([df_existante, df], ignore_index=True)
@@ -86,6 +89,25 @@ def reset_state():
     st.session_state['resultat'] = None
     st.session_state['id_classe_predite'] = None
     st.session_state['source_image'] = None
+
+
+def pred_confusion_matrix(feedback, classes, model_name=None):
+    df_feedback = pd.read_csv(feedback)
+    if model_name is not None:
+        df_feedback = df_feedback[df_feedback['Modèle Utilisé'] == model_name]
+    df_feedback.dropna(subset=['Classe Predite', 'Bonne Classe'], inplace=True)
+    df_feedback.drop_duplicates(subset=['URL', 'Classe Predite', 'Bonne Classe', 'Modèle Utilisé'], inplace=True)
+    matrice_conf = confusion_matrix(df_feedback['Bonne Classe'], df_feedback['Classe Predite'], labels=classes)
+    return matrice_conf
+
+def plot_confusion_matrix(conf_matrix, classes):
+    fig, ax = plt.subplots(figsize=(10, 7))
+    sns.heatmap(conf_matrix, annot=True, fmt='d',
+                xticklabels=classes, yticklabels=classes, cmap='Blues', ax=ax)
+    ax.set_title("Matrice de confusion prédictions sur les images du web")
+    ax.set_ylabel('Vraie classe')
+    ax.set_xlabel('Classe prédite')
+    return fig
 
 # CSS FICTIF
 color_palette = px.colors.sequential.speed
@@ -111,7 +133,8 @@ st.markdown("""
 # RESSOURCES 
 # DataFrame 
 data = pd.read_csv("src/streamlit/fichiers/dataset_plantes.csv")
-
+feedbacks = "src/streamlit/fichiers/feedback/feedback.csv"
+especes = list(data['Classe'].unique())
 #  Modeles  
 #  Liste des modèles  
 # A PERSONNALISER AVEC VOS MODELES POUR LE MOMENT ET APRES LES AVOIR INSERER DANS VOTRE DOSSIER SRC/STREAMLIT/FICHIERS LOCAL
@@ -236,8 +259,6 @@ if choose == "DataViz":
     """)
     # Exploration intéractive du DataFrame
     with st.expander("## Exploration du DataFrame"):
-        especes = list(data['Classe'].unique())
-
         # Filtrage des espèces 
         if 'selection_especes' not in st.session_state:
             st.session_state.selection_especes = []
@@ -341,6 +362,7 @@ if choose == "Utilisation du modèle":
     box_color = '#e69138'
 
     choix_modele = st.selectbox("Choisissez un modèle", noms_modeles)
+    nom_modele = choix_modele
     modele = modeles[choix_modele]
     option = st.selectbox("Comment voulez-vous télécharger une image ?", ("Choisir une image de la galerie", "Télécharger une image", "Utiliser une URL"))
 
@@ -510,7 +532,7 @@ if choose == "Utilisation du modèle":
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("Correcte"):
-                    enregistrer_feedback_pandas(url, st.session_state['classe_predite'], st.session_state['classe_predite'])
+                    enregistrer_feedback_pandas(url, st.session_state['classe_predite'], st.session_state['classe_predite'], nom_modele)
                     st.session_state['feedback_soumis'] = False
                     st.session_state['classe_predite'] = None
                     st.session_state['resultat'] = None
@@ -524,7 +546,7 @@ if choose == "Utilisation du modèle":
                 bonne_classe = st.multiselect("Précisez la bonne classe :", especes)
                 if st.button('Confirmer la classe'):
                     if bonne_classe:
-                        enregistrer_feedback_pandas(url, st.session_state['classe_predite'], bonne_classe[0])
+                        enregistrer_feedback_pandas(url, st.session_state['classe_predite'], bonne_classe[0], nom_modele)
                         time.sleep(3)
                         feedback_placeholder.empty()
                         reset_state()
@@ -534,3 +556,11 @@ if choose == "Utilisation du modèle":
 
 if choose == "Conclusion":
     st.write("### Conclusion")
+    tab_titles = [f"Modèle {noms_modeles[i]}" for i in range(len(noms_modeles))]
+    tabs = st.tabs(tab_titles)
+    for i, tab in enumerate(tabs):
+        with tab:
+            model_name = noms_modeles[i]
+            conf_matrix = pred_confusion_matrix(feedbacks, especes, model_name)
+            fig = plot_confusion_matrix(conf_matrix, especes)
+            st.pyplot(fig)
