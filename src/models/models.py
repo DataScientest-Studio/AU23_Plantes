@@ -197,9 +197,9 @@ class Trainer():
         print(f"train last {nb_layers} layers")
         for layer in self.base_model.model.layers:
             layer.trainable = True
-        for layer in self.base_model.model.layers[:-nb_layers]:
-            if not ('Normalization' in str(type(self.base_model.model.layers[-1]))):
-                layer.trainable = False
+        # for layer in self.base_model.model.layers[:-nb_layers]:
+        #     if not ('Normalization' in str(type(self.base_model.model.layers[-1]))):
+        #         layer.trainable = False
 
 
     def process_training(self):
