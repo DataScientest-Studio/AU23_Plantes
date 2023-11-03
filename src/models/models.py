@@ -157,9 +157,12 @@ class Trainer():
 
         def preprocessing_lambda(image):
             if image.dtype == 'float32':
+                norm=True
                 image2 = (image - np.min(image)) / (np.max(image) - np.min(image))
             image2 = lf.segmentation.remove_background(image2)
-            image2 = image2 * (np.max(image) - np.min(image)) + np.min(image)
+            #TODO : voir avec Iréné si la correction est correcte
+            if norm:
+                image2 = image2 * (np.max(image) - np.min(image)) + np.min(image)
             return preproc(image2)
 
         self.base_model.preprocessing = preprocessing_lambda
@@ -197,9 +200,9 @@ class Trainer():
         print(f"train last {nb_layers} layers")
         for layer in self.base_model.model.layers:
             layer.trainable = True
-        # for layer in self.base_model.model.layers[:-nb_layers]:
-        #     if not ('Normalization' in str(type(self.base_model.model.layers[-1]))):
-        #         layer.trainable = False
+        for layer in self.base_model.model.layers[:-nb_layers]:
+            # if not ('Normalization' in str(type(self.base_model.model.layers[-1]))):
+            layer.trainable = False
 
 
     def process_training(self):
@@ -265,7 +268,7 @@ class Trainer():
         self.results = lf.data_builder.get_predictions_dataframe(self.model, self.test, self.data.test_df)
         return self.results
 
-    def save_evaluation_reports(self)-> None :
+    def save_evaluation_reports(self, gradcam)-> None :
         """
         Save all the reports in FIGURE_DIR and return it as a string.
         """
@@ -274,8 +277,9 @@ class Trainer():
         self.display_history_graphs( save=True)
         self.display_confusion_matrix(save=True)
         self.display_samples(nb=3,save=True)
-        self.display_samples(nb=6, gradcam=True, guidedGrad_cam=True, segmented=False,  save=True)
-        self.display_samples(nb=6, gradcam=True, guidedGrad_cam=True, segmented=True,  save=True)
+        if gradcam :
+            self.display_samples(nb=6, gradcam=True, guidedGrad_cam=True, segmented=False,  save=True)
+            self.display_samples(nb=6, gradcam=True, guidedGrad_cam=True, segmented=True,  save=True)
 
     def print_classification_report(self, save=False) -> str:
         """

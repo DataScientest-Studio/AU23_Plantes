@@ -36,7 +36,7 @@ class Campaign() :
             tf.keras.backend.clear_session()
 
 
-    def evaluate_and_build_reports(self) :
+    def evaluate_and_build_reports(self, gradcam=True) :
         fig_dir = lm.models.FIGURE_DIR
         campaign_dir = f"{fig_dir}/{self.campaign_id}"
         if not os.path.exists(campaign_dir):
@@ -44,9 +44,14 @@ class Campaign() :
         for model in self.models:
             m= model(self.data, self.campaign_id)
             m.fit_or_load(training=False)
-            m.save_evaluation_reports()
+            m.save_evaluation_reports(gradcam)
             self.active_models.append(m)
-        lv.graphs.compare_models_confusions(self.active_models, save=True, fig_dir=lm.models.FIGURE_DIR)
-        lv.graphs.compare_models_performances(self.active_models, save=True, fig_dir=lm.models.FIGURE_DIR)
+        self.compare_models_confusions(save=True)
+        self.compare_models_performances(save=True)
 
 
+    def compare_models_performances(self,save=False) :
+        lv.graphs.compare_models_performances(self.active_models, save=save, fig_dir=lm.models.FIGURE_DIR)
+
+    def compare_models_confusions(self, save= False):
+        lv.graphs.compare_models_confusions(self.active_models, save=save, fig_dir=lm.models.FIGURE_DIR)

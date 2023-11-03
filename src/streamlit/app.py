@@ -4,6 +4,9 @@ import requests
 import os
 import pandas as pd
 import numpy as np
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
 import plotly.express as px
 from PIL import Image
 from io import BytesIO
@@ -21,13 +24,16 @@ st.set_page_config(
 )
 
 # FONCTIONS
+@st.cache_data
 def distribution_des_classes(data):
     return px.histogram(data, x="Classe", title="Distribution des classes", color='Classe', color_discrete_sequence=color_palette)
 
+@st.cache_data
 def poids_median_resolution(data):
     df_median = data.groupby('Classe')['Résolution'].median().reset_index()
     return px.bar(df_median, x='Classe', y='Résolution', title="Résolution médiane des images selon l'espèce", color='Classe', color_discrete_sequence=color_palette)
 
+@st.cache_data
 def ratios_images(data):
     bins = [0, 0.90, 0.95, 0.99, 1.01, 1.05, max(data['Ratio']) + 0.01]
     bin_labels = ['<0.90', '0.90-0.94', '0.95-0.99', '1', '1.01-1.04', '>1.05']
@@ -35,6 +41,7 @@ def ratios_images(data):
     count_data = data.groupby(['Ratio_cat', 'Classe']).size().reset_index(name='Nombre')
     return px.bar(count_data, x='Ratio_cat', y='Nombre', color='Classe', title="Nombre d'images par classe pour chaque catégorie de ratio", barmode='group', color_discrete_sequence=color_palette)
 
+@st.cache_data
 def repartition_rgb_rgba(data):
     compte_rgba = data[data["Canaux"] == 4].shape[0]
     compte_rgb = data[data["Canaux"] == 3].shape[0]
@@ -42,6 +49,7 @@ def repartition_rgb_rgba(data):
     etiquettes = ["RGB", "RGBA"]
     return px.pie(values=valeurs, names=etiquettes, title="Répartition des images en RGB et RGBA", color=etiquettes, color_discrete_sequence=color_palette)
 
+@st.cache_data
 def repartition_especes_images_rgba(data):
     donnees_rgba = data[data["Canaux"] == 4]
     repartition_especes_rgba = donnees_rgba['Classe'].value_counts().reset_index()
@@ -62,6 +70,44 @@ def preprocess_image(image, target_size=(150, 150)):
         image_np = img_prep.img_to_array(image) / 255.0  # Rescale
         image_np = np.expand_dims(image_np, axis=0)
         return image_np
+
+def enregistrer_feedback_pandas(url, classe_predite, bonne_classe, nom_modele):
+    file_path = os.path.join('src', 'streamlit', 'fichiers', 'feedback', 'feedback.csv')
+    df = pd.DataFrame([[url, classe_predite, bonne_classe, nom_modele]], columns=['URL', 'Classe Predite', 'Bonne Classe', 'Modèle Utilisé'])
+    if os.path.isfile(file_path):
+        df_existante = pd.read_csv(file_path)
+        df_finale = pd.concat([df_existante, df], ignore_index=True)
+    else:
+        df_finale = df
+    df_finale.to_csv(file_path, index=False)
+    st.success('Feedback enregistré avec succès !')
+
+def reset_state():
+    st.session_state['feedback_soumis'] = False
+    st.session_state['mauvaise_pred'] = False
+    st.session_state['classe_predite'] = None
+    st.session_state['resultat'] = None
+    st.session_state['id_classe_predite'] = None
+    st.session_state['source_image'] = None
+
+
+def pred_confusion_matrix(feedback, classes, model_name=None):
+    df_feedback = pd.read_csv(feedback)
+    if model_name is not None:
+        df_feedback = df_feedback[df_feedback['Modèle Utilisé'] == model_name]
+    df_feedback.dropna(subset=['Classe Predite', 'Bonne Classe'], inplace=True)
+    df_feedback.drop_duplicates(subset=['URL', 'Classe Predite', 'Bonne Classe', 'Modèle Utilisé'], inplace=True)
+    matrice_conf = confusion_matrix(df_feedback['Bonne Classe'], df_feedback['Classe Predite'], labels=classes)
+    return matrice_conf
+
+def plot_confusion_matrix(conf_matrix, classes):
+    fig, ax = plt.subplots(figsize=(10, 7))
+    sns.heatmap(conf_matrix, annot=True, fmt='d',
+                xticklabels=classes, yticklabels=classes, cmap='Blues', ax=ax)
+    ax.set_title("Matrice de confusion prédictions sur les images du web")
+    ax.set_ylabel('Vraie classe')
+    ax.set_xlabel('Classe prédite')
+    return fig
 
 # CSS FICTIF
 color_palette = px.colors.sequential.speed
@@ -87,7 +133,8 @@ st.markdown("""
 # RESSOURCES 
 # DataFrame 
 data = pd.read_csv("src/streamlit/fichiers/dataset_plantes.csv")
-
+feedbacks = "src/streamlit/fichiers/feedback/feedback.csv"
+especes = list(data['Classe'].unique())
 #  Modeles  
 #  Liste des modèles  
 # A PERSONNALISER AVEC VOS MODELES POUR LE MOMENT ET APRES LES AVOIR INSERER DANS VOTRE DOSSIER SRC/STREAMLIT/FICHIERS LOCAL
@@ -212,8 +259,6 @@ if choose == "DataViz":
     """)
     # Exploration intéractive du DataFrame
     with st.expander("## Exploration du DataFrame"):
-        especes = list(data['Classe'].unique())
-
         # Filtrage des espèces 
         if 'selection_especes' not in st.session_state:
             st.session_state.selection_especes = []
@@ -317,6 +362,7 @@ if choose == "Utilisation du modèle":
     box_color = '#e69138'
 
     choix_modele = st.selectbox("Choisissez un modèle", noms_modeles)
+    nom_modele = choix_modele
     modele = modeles[choix_modele]
     option = st.selectbox("Comment voulez-vous télécharger une image ?", ("Choisir une image de la galerie", "Télécharger une image", "Utiliser une URL"))
 
@@ -417,6 +463,7 @@ if choose == "Utilisation du modèle":
             w_percent = base_width / float(image.size[0])
             h_size = int(float(image.size[1]) * float(w_percent))
             resized_image = image.resize((base_width, h_size), Image.ANTIALIAS)
+            st.session_state['source_image'] = 'url'
 
             col1, col2 = st.columns(2)
             with col1:
@@ -447,27 +494,73 @@ if choose == "Utilisation du modèle":
         st.write("##### Aperçu de l'image à prédire")
         st.image(image, use_column_width=True)
     
-    classe_predite = None
-    result = None
-    id_classe_predite = None
+    if 'classe_predite' not in st.session_state:
+        st.session_state['classe_predite'] = None
+    if 'resultat' not in st.session_state:
+        st.session_state['resultat'] = None
+    if 'id_classe_predite' not in st.session_state:
+        st.session_state['id_classe_predite'] = None
+    if "mauvaise_pred" not in st.session_state:
+        st.session_state['mauvaise_pred'] = False
+    if 'feedback_soumis' not in st.session_state:
+        st.session_state['feedback_soumis'] = False
+    
+    feedback_placeholder = st.empty()
+
     col1, col2, col3 = st.columns([1,1,1])
-    with col2 : 
+    with col2:
         if st.button("Prédiction", use_container_width=True) and image is not None:
             processed_image = preprocess_image(image)
-            
-            progress_bar.progress(0.3)  
-            
-            result = modele.predict(processed_image)
-            progress_bar.progress(1.0)  
-
-            id_classe_predite = np.argmax(result[0])
+            progress_bar = st.progress(0)
+            progress_bar.progress(0.3)
+            st.session_state['resultat'] = modele.predict(processed_image)
+            progress_bar.progress(1.0)
+            st.session_state['id_classe_predite'] = np.argmax(st.session_state['resultat'][0])
             class_mapping = {'Black-grass': 0, 'Charlock': 1, 'Cleavers': 2, 'Common Chickweed': 3, 'Common wheat': 4, 'Fat Hen': 5, 'Loose Silky-bent': 6, 'Maize': 7, 'Scentless Mayweed': 8, "Shepherd's Purse": 9, 'Small-flowered Cranesbill': 10, 'Sugar beet': 11}
-            classe_predite = [name for name, id in class_mapping.items() if id == id_classe_predite][0]
-            time.sleep(3)
+            st.session_state['classe_predite'] = [name for name, id in class_mapping.items() if id == st.session_state['id_classe_predite']][0]
+            time.sleep(3)  
             progress_bar.progress(0)
-    if classe_predite is not None and result is not None and id_classe_predite is not None:
-        st.markdown(f"<div style='text-align: center'>Selon le modèle, il s'agit de l'espèce <b>{classe_predite}</b> avec une précision de : <b>{result[0][id_classe_predite]*100:.2f}%</b></div>", unsafe_allow_html=True)
+    if (st.session_state.get('source_image') != 'url'):
+        if (st.session_state['classe_predite'] is not None and st.session_state['resultat'] is not None): 
+            with feedback_placeholder.container():
+                st.markdown(f"Selon le modèle, il s'agit de l'espèce **{st.session_state['classe_predite']}** avec une précision de : **{st.session_state['resultat'][0][st.session_state['id_classe_predite']]*100:.2f}%**")
+                reset_state()
 
-   
+    if (st.session_state['classe_predite'] is not None and st.session_state['resultat'] is not None and not st.session_state['feedback_soumis'] and st.session_state.get('source_image') == 'url'):
+        with feedback_placeholder.container():
+            st.markdown(f"Selon le modèle, il s'agit de l'espèce **{st.session_state['classe_predite']}** avec une précision de : **{st.session_state['resultat'][0][st.session_state['id_classe_predite']]*100:.2f}%**")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Correcte"):
+                    enregistrer_feedback_pandas(url, st.session_state['classe_predite'], st.session_state['classe_predite'], nom_modele)
+                    st.session_state['feedback_soumis'] = False
+                    st.session_state['classe_predite'] = None
+                    st.session_state['resultat'] = None
+                    st.session_state['id_classe_predite'] = None
+            with col2:
+                if st.button("Incorrecte"):
+                    st.session_state['mauvaise_pred'] = True
+
+            if st.session_state['mauvaise_pred']:
+                especes = list(data['Classe'].unique())
+                bonne_classe = st.multiselect("Précisez la bonne classe :", especes)
+                if st.button('Confirmer la classe'):
+                    if bonne_classe:
+                        enregistrer_feedback_pandas(url, st.session_state['classe_predite'], bonne_classe[0], nom_modele)
+                        time.sleep(3)
+                        feedback_placeholder.empty()
+                        reset_state()
+                    else:
+                        st.error("Veuillez sélectionner une classe avant de confirmer.")
+
+
 if choose == "Conclusion":
     st.write("### Conclusion")
+    tab_titles = [f"Modèle {noms_modeles[i]}" for i in range(len(noms_modeles))]
+    tabs = st.tabs(tab_titles)
+    for i, tab in enumerate(tabs):
+        with tab:
+            model_name = noms_modeles[i]
+            conf_matrix = pred_confusion_matrix(feedbacks, especes, model_name)
+            fig = plot_confusion_matrix(conf_matrix, especes)
+            st.pyplot(fig)
