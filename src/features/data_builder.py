@@ -199,15 +199,13 @@ def readImage(path:str, size:tuple=None) -> np.ndarray:
 
 
 def last_conv_layer(model):
-     for layer in reversed(model.layers):
-         if 'Conv' in str(type(layer)) :
-         #if ('onv' in layer.name):
-             print (layer.name)
-             return layer
-     print("couche gradcam non trouvée - return last layer")
-     return model.layers[-1]
-
-
+    for layer in reversed(model.layers):
+        if 'Conv' in str(type(layer)) :
+        #if ('onv' in layer.name):
+            print (layer.name)
+            return layer
+    print("couche gradcam non trouvée - return last layer")
+    return model.layers[-1]
 
 
 def make_gradcam_heatmap(img_array: np.ndarray, complete_model : Model, base_model_wrapper : lm.model_wrapper.BaseModelWrapper) -> np.ndarray:
@@ -281,15 +279,18 @@ def gradCAMImage(img_path :str, img_size : tuple, model : Model,
         img = tf.keras.utils.img_to_array(img)
         img = np.uint8(img * 255)
         IMG = img.copy( )
+    else:
+        img = np.uint8(img * 255)
+        IMG = img.copy( )
 
-        shape           = (1,) + img.shape
-        IMG             = IMG.reshape(shape)
-        gb              = guided_backprop(model=model, img=IMG, upsample_size=img_size) 
-        guided_gradcam  = deprocess_image(gb * jet_heatmap)
-        guided_gradcam  = cv2.cvtColor(guided_gradcam, cv2.COLOR_BGR2RGB)
+    shape           = (1,) + img.shape
+    IMG             = IMG.reshape(shape)
+    gb              = guided_backprop(model=model, img=IMG, upsample_size=img_size) 
+    guided_gradcam  = deprocess_image(gb * jet_heatmap)
+    guided_gradcam  = cv2.cvtColor(guided_gradcam, cv2.COLOR_BGR2RGB)
 
-        if guidedGrad_cam:
-            return guided_gradcam
+    if guidedGrad_cam:
+        return guided_gradcam
     
     # Superimpose the heatmap on original image
     superimposed_img = jet_heatmap * 0.4 + img

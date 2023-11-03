@@ -29,6 +29,7 @@ import pickle
 
 RECORD_DIR: str = "../models/records"
 FIGURE_DIR: str = "../reports/figures"
+BEST_MODEL_DIR: str = "../models/records"
 
 class Trainer():
     #abstract class
@@ -48,10 +49,15 @@ class Trainer():
         fill_mode="nearest",
     )
 
+    record_name: str = None
     epoch1: int = 12 #12
     lr1: float = 1e-3
+
+    if record_name[1:] == "-simple-Cnn":
+        epoch1 = 20
+        lr1 :int = 4e-5
     # used for 2 rounds fine tuning
-    epoch2: int = 30 #30
+    epoch2: int = 20 #30
     lr2: float = lr1*1e-1
 
     lr_reduction = ReduceLROnPlateau(monitor='val_loss', factor=0.1, # min_delta=1e-3,
@@ -59,11 +65,10 @@ class Trainer():
                                      verbose=1),
     stop_callback = EarlyStopping(monitor='val_loss', patience=10, # min_delta=5e-3,#tf.math.ceil(epoch1/5),
                                   restore_best_weights=True, verbose=1)
-
+    
     batch_size = 32
 
     # other attributes that will be init by subclasses
-    record_name: str = None
     base_model: lm.model_wrapper.BaseModelWrapper = None
     model: Model = None
     data: lf.data_builder.ImageDataWrapper = None
@@ -74,6 +79,11 @@ class Trainer():
     history2: dict = None
     results: pd.DataFrame = None
     campaign_id: str = None
+
+    path_best_models = f"{BEST_MODEL_DIR}/{campaign_id}/best-{record_name}-model.h5"
+    callbacks_best_models = tf.keras.callbacks.\
+                ModelCheckpoint(filepath=path_best_models, 
+                        monitor="val_categorycal_accuracy", verbose=1, save_best_only=True)
 
 
     def __init__(self, data_wrapper, campaign_id="default"):
@@ -198,11 +208,13 @@ class Trainer():
         self.base_model.model.trainable = True
         nb_layers = round(layer_percent / 100 * len(self.base_model.model.layers))
         print(f"train last {nb_layers} layers")
+        
         for layer in self.base_model.model.layers:
             if (remove_normalization & ('Normalization' in str(type(layer)))):
                 layer.trainable = False
             else:
                 layer.trainable = True
+        
         for layer in self.base_model.model.layers[:-nb_layers]:
             layer.trainable = False
 
@@ -235,7 +247,7 @@ class Trainer():
             epochs=epochs,
             batch_size=self.batch_size,
             class_weight=self.data.weights,
-            callbacks=[self.lr_reduction, self.stop_callback]
+            callbacks=[self.lr_reduction, self.stop_callback, self.callbacks_best_models]
         ).history
 
         if (is_fine_tuning) : self.history2 = history
@@ -280,8 +292,8 @@ class Trainer():
         self.display_confusion_matrix(save=True)
         self.display_samples(nb=3,save=True)
         if gradcam :
-            self.display_samples(nb=6, gradcam=True, guidedGrad_cam=True, segmented=False,  save=True)
-            self.display_samples(nb=6, gradcam=True, guidedGrad_cam=True, segmented=True,  save=True)
+            self.display_samples(nb=12, gradcam=True, guidedGrad_cam=True, segmented=False,  save=True)
+            self.display_samples(nb=12, gradcam=True, guidedGrad_cam=True, segmented=True,  save=True)
 
     def print_classification_report(self, save=False) -> str:
         """

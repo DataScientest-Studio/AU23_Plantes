@@ -23,7 +23,6 @@ class Stage2(lm.models.Trainer):
         self.add_background_removal()
         super().__init__(data_wrapper, campaign_id)
         x = self.base_model.model.output
-        x = GlobalAveragePooling2D()(x)
         x = Dropout(0.2)(x)
         output = Dense(12, activation='softmax', name='main')(x)
         self.model = Model(inputs=self.base_model.model.input, outputs=output)
@@ -37,7 +36,7 @@ class CNN(Stage2):
     record_name = "2-noBg-Cnn"
     def __init__(self, data_wrapper, campaign_id):
         # set the base model -- must be set before super().__init__()
-        self.base_model = lm.model_wrapper.SimpleCNN(self.img_size,pooling='avg')
+        self.base_model = lm.model_wrapper.SimpleCNN(self.img_size)
         super().__init__(data_wrapper, campaign_id)
 
 
@@ -54,5 +53,5 @@ class ResNetv2(Stage2):
 
     def __init__(self, data_wrapper, campaign_id):
         # set the base model -- must be set before super().__init__()
-        self.base_model = lm.model_wrapper.ResNet50V2(self.img_size)
+        self.base_model = lm.model_wrapper.ResNet50V2(self.img_size,pooling='avg')
         super().__init__(data_wrapper, campaign_id)

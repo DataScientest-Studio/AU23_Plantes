@@ -2,7 +2,7 @@ import tensorflow as tf
 
 from tensorflow import keras
 from keras import Model, Input
-
+from keras.regularizers import l2
 
 class BaseModelWrapper:
     """
@@ -27,7 +27,6 @@ class VoidBaseModel(BaseModelWrapper):
         self.model = Model(inputs=inputs, outputs=inputs)
         self.grad_cam_layer = None
 
-from keras.regularizers import l2
 class SimpleCNN(BaseModelWrapper):
     def __init__(self, img_size: tuple) -> None:
         self.preprocessing = lambda x: x / 255.

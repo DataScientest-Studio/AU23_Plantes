@@ -35,12 +35,18 @@ class Stage6(lm.models.Trainer):
         # x = MaxPooling2D(2, 2)(x)
         # x = Conv2D(256, (3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.001))(x)
         # x = BatchNormalization()(x)
-        x = GlobalAveragePooling2D()(x)
-        # x = Flatten()(x)
+
+        #x = GlobalAveragePooling2D()(x)
+        #x = Dropout(0.5)(x)
+        #x = Dense(1024, activation='relu')(x)
+        #x = Dropout(0.5)(x)
+
+    
         x = Dense(512, activation='relu')(x)
         x = Dropout(0.5)(x)
         x = Dense(256, activation='relu')(x)        
         x = Dropout(0.2)(x)
+        
         output = Dense(12, activation='softmax', name='main')(x)
         self.model = Model(inputs=self.base_model.model.input, outputs=output)
 

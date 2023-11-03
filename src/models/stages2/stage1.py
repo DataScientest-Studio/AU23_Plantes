@@ -6,7 +6,7 @@ from tensorflow import keras
 from keras.layers import Dense, AveragePooling2D, Dropout, GlobalAveragePooling2D
 from keras import Model, Input, Sequential
 
-""""
+"""
 
 
 
@@ -25,7 +25,7 @@ class Stage1(lm.models.Trainer):
 
     def __init__(self, data_wrapper, campaign_id):
         super().__init__(data_wrapper,campaign_id)
-        x = self.base_model.model.output,
+        x = self.base_model.model.output
         x = Dropout(0.2)(x)
         output = Dense(12, activation='softmax', name='main')(x)
         self.model = Model(inputs=self.base_model.model.input, outputs=output)
