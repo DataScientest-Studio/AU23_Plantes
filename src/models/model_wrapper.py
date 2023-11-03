@@ -38,8 +38,7 @@ class MobileNetv2(BaseModelWrapper) :
                 input_shape=img_size + (3,),
                 include_top=False,
                 alpha=1.0,
-                weights='imagenet',
-                pooling='avg'
+                weights='imagenet'
             )
         self.grad_cam_layer = 'Conv_1'
 

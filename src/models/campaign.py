@@ -46,7 +46,12 @@ class Campaign() :
             m.fit_or_load(training=False)
             m.save_evaluation_reports()
             self.active_models.append(m)
-        lv.graphs.compare_models_confusions(self.active_models, save=True, fig_dir=lm.models.FIGURE_DIR)
-        lv.graphs.compare_models_performances(self.active_models, save=True, fig_dir=lm.models.FIGURE_DIR)
+        self.compare_models_confusions(save=True)
+        self.compare_models_performances(save=True)
 
 
+    def compare_models_performances(self,save=False) :
+        lv.graphs.compare_models_performances(self.active_models, save=save, fig_dir=lm.models.FIGURE_DIR)
+
+    def compare_models_confusions(self, save= False):
+        lv.graphs.compare_models_confusions(self.active_models, save=save, fig_dir=lm.models.FIGURE_DIR)
