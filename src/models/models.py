@@ -198,7 +198,7 @@ class Trainer():
         for layer in self.base_model.model.layers:
             layer.trainable = True
         for layer in self.base_model.model.layers[:-nb_layers]:
-            if not ('Normalization' in str(type(self.base_model.model.layers[-1]))):
+            if not ('Normalization' in str(type(layer))):
                 layer.trainable = False
 
 
