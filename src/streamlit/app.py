@@ -21,13 +21,16 @@ st.set_page_config(
 )
 
 # FONCTIONS
+@st.cache_data
 def distribution_des_classes(data):
     return px.histogram(data, x="Classe", title="Distribution des classes", color='Classe', color_discrete_sequence=color_palette)
 
+@st.cache_data
 def poids_median_resolution(data):
     df_median = data.groupby('Classe')['Résolution'].median().reset_index()
     return px.bar(df_median, x='Classe', y='Résolution', title="Résolution médiane des images selon l'espèce", color='Classe', color_discrete_sequence=color_palette)
 
+@st.cache_data
 def ratios_images(data):
     bins = [0, 0.90, 0.95, 0.99, 1.01, 1.05, max(data['Ratio']) + 0.01]
     bin_labels = ['<0.90', '0.90-0.94', '0.95-0.99', '1', '1.01-1.04', '>1.05']
@@ -35,6 +38,7 @@ def ratios_images(data):
     count_data = data.groupby(['Ratio_cat', 'Classe']).size().reset_index(name='Nombre')
     return px.bar(count_data, x='Ratio_cat', y='Nombre', color='Classe', title="Nombre d'images par classe pour chaque catégorie de ratio", barmode='group', color_discrete_sequence=color_palette)
 
+@st.cache_data
 def repartition_rgb_rgba(data):
     compte_rgba = data[data["Canaux"] == 4].shape[0]
     compte_rgb = data[data["Canaux"] == 3].shape[0]
@@ -42,6 +46,7 @@ def repartition_rgb_rgba(data):
     etiquettes = ["RGB", "RGBA"]
     return px.pie(values=valeurs, names=etiquettes, title="Répartition des images en RGB et RGBA", color=etiquettes, color_discrete_sequence=color_palette)
 
+@st.cache_data
 def repartition_especes_images_rgba(data):
     donnees_rgba = data[data["Canaux"] == 4]
     repartition_especes_rgba = donnees_rgba['Classe'].value_counts().reset_index()
@@ -506,24 +511,25 @@ if choose == "Utilisation du modèle":
             with col1:
                 if st.button("Correcte"):
                     enregistrer_feedback_pandas(url, st.session_state['classe_predite'], st.session_state['classe_predite'])
-                    reset_state()
-                    feedback_placeholder.empty()
+                    st.session_state['feedback_soumis'] = False
+                    st.session_state['classe_predite'] = None
+                    st.session_state['resultat'] = None
+                    st.session_state['id_classe_predite'] = None
             with col2:
                 if st.button("Incorrecte"):
                     st.session_state['mauvaise_pred'] = True
 
-    if st.session_state['mauvaise_pred']:
-        with feedback_placeholder.container():
-            especes = list(data['Classe'].unique())
-            bonne_classe = st.multiselect("Précisez la bonne classe :", especes)
-            if st.button('Confirmer la classe'):
-                if bonne_classe:
-                    enregistrer_feedback_pandas(url, st.session_state['classe_predite'], bonne_classe[0])
-                    time.sleep(3)
-                    feedback_placeholder.empty()
-                    reset_state()
-                else:
-                    st.error("Veuillez sélectionner une classe avant de confirmer.")
+            if st.session_state['mauvaise_pred']:
+                especes = list(data['Classe'].unique())
+                bonne_classe = st.multiselect("Précisez la bonne classe :", especes)
+                if st.button('Confirmer la classe'):
+                    if bonne_classe:
+                        enregistrer_feedback_pandas(url, st.session_state['classe_predite'], bonne_classe[0])
+                        time.sleep(3)
+                        feedback_placeholder.empty()
+                        reset_state()
+                    else:
+                        st.error("Veuillez sélectionner une classe avant de confirmer.")
 
 
 if choose == "Conclusion":
