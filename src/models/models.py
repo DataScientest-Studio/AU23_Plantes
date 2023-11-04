@@ -29,7 +29,6 @@ import pickle
 
 RECORD_DIR: str = "../models/records"
 FIGURE_DIR: str = "../reports/figures"
-BEST_MODEL_DIR: str = "../models/records"
 
 class Trainer():
     #abstract class
@@ -53,9 +52,7 @@ class Trainer():
     epoch1: int = 12 #12
     lr1: float = 1e-3
 
-    if record_name[1:] == "-simple-Cnn":
-        epoch1 = 20
-        lr1 :int = 4e-5
+
     # used for 2 rounds fine tuning
     epoch2: int = 20 #30
     lr2: float = lr1*1e-1
@@ -80,10 +77,11 @@ class Trainer():
     results: pd.DataFrame = None
     campaign_id: str = None
 
-    path_best_models = f"{BEST_MODEL_DIR}/{campaign_id}/best-{record_name}-model.h5"
-    callbacks_best_models = tf.keras.callbacks.\
-                ModelCheckpoint(filepath=path_best_models, 
-                        monitor="val_categorycal_accuracy", verbose=1, save_best_only=True)
+    def get_best_models_callback(self):
+        _,_,file = self.get_filenames()
+        return tf.keras.callbacks.\
+                ModelCheckpoint(filepath=file,
+                        monitor="val_categorical_accuracy", verbose=1, save_best_only=True)
 
 
     def __init__(self, data_wrapper, campaign_id="default"):
@@ -107,7 +105,7 @@ class Trainer():
             List[str]: A list of file paths containing the serialized model and history filenames.
         """
         history1_file, history2_file, model_file = self.get_filenames()
-        self.model.save(model_file)
+        #self.model.save(model_file)
         with open(history1_file, 'wb') as f:
             pickle.dump(self.history1, f)
         if (self.history2):
@@ -247,7 +245,7 @@ class Trainer():
             epochs=epochs,
             batch_size=self.batch_size,
             class_weight=self.data.weights,
-            callbacks=[self.lr_reduction, self.stop_callback, self.callbacks_best_models]
+            callbacks=[self.lr_reduction, self.stop_callback, self.get_best_models_callback()]
         ).history
 
         if (is_fine_tuning) : self.history2 = history

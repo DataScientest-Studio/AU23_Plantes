@@ -129,10 +129,10 @@ campaign= lm.campaign.Campaign(campaign_id='test-finetuning2', data_wrapper=data
 #### train
 #### models will be serialized in RECORD_DIR (launch only once by campaign)
 
-campaign.train_all()
+#campaign.train_all()
 
 
 #### evaluate
 #### models will be loaded and results saved in FIGURE_DIR/campaign_id
 
-#campaign.evaluate_and_build_reports(gradcam=False)
+campaign.evaluate_and_build_reports(gradcam=False)

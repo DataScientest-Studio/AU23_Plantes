@@ -133,7 +133,7 @@ def get_data_flows(image_data_wrapper: ImageDataWrapper, base_model: lm.model_wr
 
     validation = train_generator.flow_from_dataframe(
         dataframe=image_data_wrapper.train_df,
-        shuffle=True,
+        shuffle=False,
         subset='validation',
         **generator_param
     )
