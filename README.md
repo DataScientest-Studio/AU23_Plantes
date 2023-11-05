@@ -17,7 +17,7 @@ Derrière ce FloraFlow se trouvent 4 personnes en formation chez DataScientest:
 
 - Gilles de Peretti [Linkedin](#) - [GitHub](#)
 - Hassan ZBIB [Linkedin](#) - [GitHub](#)
-- Dr. Iréné Bérenger AMIEHE ESSOMBA [Linkedin](#) - [GitHub](#)
+- Dr. Iréné AMIEHE ESSOMBA [Linkedin](#) - [GitHub](#)
 - Olivier MOTELET [Linkedin](#) - [GitHub](#)
 
 ## A propos du dataset 

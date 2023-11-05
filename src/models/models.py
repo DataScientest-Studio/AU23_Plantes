@@ -78,7 +78,8 @@ class Trainer():
     campaign_id: str = None
 
     def get_best_models_callback(self):
-        _,_,file = self.get_filenames()
+        #_,_,file = self.get_filenames()
+        file = f"./models/records/test/{self.campaign_id}/{self.record_name}_model.h5"
         return tf.keras.callbacks.\
                 ModelCheckpoint(filepath=file,
                         monitor="val_categorical_accuracy", verbose=1, save_best_only=True)
