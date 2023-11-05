@@ -250,6 +250,15 @@ def display_image_distribution(data_df):
     plt.show()
 
 def plot_median_weight(classes, data_df):
+    """
+    Generate a bar plot to visualize median weights per class.
+
+    Parameters:
+    classes (list): A list of class names present in the dataset.
+    data_df (pandas.DataFrame): A DataFrame with columns 'Class' and 'Weight'
+        containing class names and their corresponding weights.
+    """
+
     median_weights_per_class = data_df.groupby('Class')['Weight'].median()
 
     n_classes = len(classes)
