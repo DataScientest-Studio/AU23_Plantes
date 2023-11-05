@@ -125,7 +125,7 @@ def plotly_histogram(
 
     fig.update_xaxes(showgrid=False)
     fig.update_yaxes(showgrid=False)
-    fig.write_html('plotly.html')
+    #fig.write_html('plotly.html')
 
     return fig
 
@@ -145,7 +145,7 @@ def compute(
         img = plt.imread(PATHS[name_id]).astype("float32")
         name = PLANT_NAMES[name_id]
         img2rgbLAB = lf.segmentation.RGB2LAB_SPACE(image=img.copy())
-        channels = [img2rgbLAB[:, :, j].ravel() * scaling_factor for j in range(3)] 
+        channels = [img2rgbLAB[..., j].ravel() * scaling_factor for j in range(3)] 
 
         fig = plotly_histogram(channels=channels, size=size, opacity=opacity, name=name)
         fig.show()
@@ -177,7 +177,7 @@ def compute(
         name = PLANT_NAMES[plant_id]
 
         img2rgbLAB = lf.segmentation.RGB2LAB_SPACE(image=img.copy())
-        channels = [img2rgbLAB[:, :, j].ravel() * scaling_factor for j in range(3)] 
+        channels = [img2rgbLAB[..., j].ravel() * scaling_factor for j in range(3)] 
 
         img_without_bg = lf.segmentation.\
                     remove_background(

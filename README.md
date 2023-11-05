@@ -36,7 +36,7 @@ Le dataset V2 Plant Seedlings est composé de 5539 images représentant des plan
     │   ├── 0- Data exploration.ipynb
     │   ├── 1- Trainer demo.ipynb
     │   ├── 2- Campaign demo.ipynb
-    │   ├── 3- Model results.ipynb
+    │   └── 3- Model results.ipynb
     ├── packages.txt
     ├── references
     ├── reports
@@ -63,8 +63,11 @@ Le dataset V2 Plant Seedlings est composé de 5539 images représentant des plan
         ├── streamlit
         │   ├── app.py
         │   ├── config.toml
+        |   ├── mods
+        |   |    ├── __init__.py
+        |   |    └── histogram_color.py
         │   └── fichiers
-        │       ├── gallery
+        │       └── gallery
         └── visualization
             ├── __init__.py
             ├── eda.py
