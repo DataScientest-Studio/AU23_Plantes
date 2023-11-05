@@ -77,7 +77,7 @@ Le dataset V2 Plant Seedlings est composé de 5539 images représentant des plan
 Pour commencer à utiliser FloraFlow, clonez le dépôt et installez les dépendances nécessaires :
 
     ```bash
-    git clone https://github.com/DataScientest-Studio/AU23_Plantes.git
+    git clone https://github.com/DataScientest-Studio/AU23_Plantes.git FloraFlow
     cd FloraFlow
     pip install -r requirements.txt
     ```
