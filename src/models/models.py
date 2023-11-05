@@ -48,10 +48,13 @@ class Trainer():
         fill_mode="nearest",
     )
 
+    record_name: str = None
     epoch1: int = 12 #12
     lr1: float = 1e-3
+
+
     # used for 2 rounds fine tuning
-    epoch2: int = 30 #30
+    epoch2: int = 20 #30
     lr2: float = lr1*1e-1
 
     lr_reduction = ReduceLROnPlateau(monitor='val_loss', factor=0.1, # min_delta=1e-3,
@@ -59,11 +62,10 @@ class Trainer():
                                      verbose=1),
     stop_callback = EarlyStopping(monitor='val_loss', patience=10, # min_delta=5e-3,#tf.math.ceil(epoch1/5),
                                   restore_best_weights=True, verbose=1)
-
+    
     batch_size = 32
 
     # other attributes that will be init by subclasses
-    record_name: str = None
     base_model: lm.model_wrapper.BaseModelWrapper = None
     model: Model = None
     data: lf.data_builder.ImageDataWrapper = None
@@ -74,6 +76,13 @@ class Trainer():
     history2: dict = None
     results: pd.DataFrame = None
     campaign_id: str = None
+
+    def get_best_models_callback(self):
+        #_,_,file = self.get_filenames()
+        file = f"./models/records/test/{self.campaign_id}/{self.record_name}_model.h5"
+        return tf.keras.callbacks.\
+                ModelCheckpoint(filepath=file,
+                        monitor="val_categorical_accuracy", verbose=1, save_best_only=True)
 
 
     def __init__(self, data_wrapper, campaign_id="default"):
@@ -97,7 +106,7 @@ class Trainer():
             List[str]: A list of file paths containing the serialized model and history filenames.
         """
         history1_file, history2_file, model_file = self.get_filenames()
-        self.model.save(model_file)
+        #self.model.save(model_file)
         with open(history1_file, 'wb') as f:
             pickle.dump(self.history1, f)
         if (self.history2):
@@ -185,10 +194,10 @@ class Trainer():
             self.print_step("Loading")
             self.deserialize()
 
-    def make_trainable_base_model_last_layers(self, layer_percent: int = 10):
+    def make_trainable_base_model_last_layers(self, layer_percent: int = 10, remove_normalization :bool = True):
         """
         Makes the last `layer_percent` layers of the base model trainable.
-        Avoid making trainable the Normallization layers
+        Avoid making trainable the Normalization layers
         Args:
             layer_percent (int): The percent of last layers to make trainable. Defaults to 10.
 
@@ -198,10 +207,14 @@ class Trainer():
         self.base_model.model.trainable = True
         nb_layers = round(layer_percent / 100 * len(self.base_model.model.layers))
         print(f"train last {nb_layers} layers")
+        
         for layer in self.base_model.model.layers:
-            layer.trainable = True
+            if (remove_normalization & ('Normalization' in str(type(layer)))):
+                layer.trainable = False
+            else:
+                layer.trainable = True
+        
         for layer in self.base_model.model.layers[:-nb_layers]:
-            # if not ('Normalization' in str(type(self.base_model.model.layers[-1]))):
             layer.trainable = False
 
 
@@ -233,7 +246,7 @@ class Trainer():
             epochs=epochs,
             batch_size=self.batch_size,
             class_weight=self.data.weights,
-            callbacks=[self.lr_reduction, self.stop_callback]
+            callbacks=[self.lr_reduction, self.stop_callback, self.get_best_models_callback()]
         ).history
 
         if (is_fine_tuning) : self.history2 = history
@@ -278,8 +291,8 @@ class Trainer():
         self.display_confusion_matrix(save=True)
         self.display_samples(nb=3,save=True)
         if gradcam :
-            self.display_samples(nb=6, gradcam=True, guidedGrad_cam=True, segmented=False,  save=True)
-            self.display_samples(nb=6, gradcam=True, guidedGrad_cam=True, segmented=True,  save=True)
+            self.display_samples(nb=12, gradcam=True, guidedGrad_cam=True, segmented=False,  save=True)
+            self.display_samples(nb=12, gradcam=True, guidedGrad_cam=True, segmented=True,  save=True)
 
     def print_classification_report(self, save=False) -> str:
         """

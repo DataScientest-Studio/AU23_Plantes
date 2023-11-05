@@ -35,7 +35,6 @@ class Campaign() :
             m.fit_or_load(training=True)
             tf.keras.backend.clear_session()
 
-
     def evaluate_and_build_reports(self, gradcam=True) :
         fig_dir = lm.models.FIGURE_DIR
         campaign_dir = f"{fig_dir}/{self.campaign_id}"
@@ -48,7 +47,6 @@ class Campaign() :
             self.active_models.append(m)
         self.compare_models_confusions(save=True)
         self.compare_models_performances(save=True)
-
 
     def compare_models_performances(self,save=False) :
         lv.graphs.compare_models_performances(self.active_models, save=save, fig_dir=lm.models.FIGURE_DIR)
