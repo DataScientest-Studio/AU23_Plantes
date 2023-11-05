@@ -16,42 +16,53 @@ def load_and_preprocess_data(base_path):
     - classes : list : List of class names.
     - image_paths : dict : Dictionary mapping class names to a list of image paths.
     - image_shapes : dict : Dictionary mapping class names to a list of image shapes.
+    - image_weights : dict : Dictionary mapping class names to a list of image weights.
     - class_distribution : dict : Dictionary mapping class names to the number of images.
     - total_images : int : The total number of images.
     """
     classes = [d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d)) and d not in ['.DS_Store', '.ipynb_checkpoints']]
     image_paths = {}
     image_shapes = {}
+    image_weights = {}  # Dictionary to store image weights
     class_distribution = {}
     total_images = 0
 
     for class_name in classes:
         class_folder_path = os.path.join(base_path, class_name)
-        num_images = len(os.listdir(class_folder_path))
-        total_images += num_images
-        class_distribution[class_name] = num_images
+        num_images = 0
+        total_weight = 0  # Total weight for this class
 
         image_paths[class_name] = []
         image_shapes[class_name] = []
+        image_weights[class_name] = []
 
         for image_name in os.listdir(class_folder_path):
             image_path = os.path.join(class_folder_path, image_name)
             image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
             image_shape = image.shape
+            image_size = image_shape[0] * image_shape[1]  # Calculate the image size as weight
 
             image_paths[class_name].append(image_path)
             image_shapes[class_name].append(image_shape)
+            image_weights[class_name].append(round(image_size / 1024, 2)) # To put the result in Ko
 
-    return classes, image_paths, image_shapes, class_distribution, total_images
+            num_images += 1
+            total_weight += image_size
 
-def create_dataframe(classes, image_paths, image_shapes):
+        class_distribution[class_name] = num_images
+        total_images += num_images
+
+    return classes, image_paths, image_shapes, image_weights, class_distribution, total_images
+
+def create_dataframe(classes, image_paths, image_shapes, image_weights):
     """
-    Create a DataFrame to hold various details about images for each class.
+    Create a DataFrame to hold various details about images for each class, including image weights.
     
     Parameters:
     - classes : list : List of class names.
     - image_paths : dict : Dictionary mapping class names to a list of image paths.
     - image_shapes : dict : Dictionary mapping class names to a list of image shapes.
+    - image_weights : dict : Dictionary mapping class names to a list of image weights.
 
     Returns:
     - data : pd.DataFrame : DataFrame containing the image details.
@@ -62,21 +73,22 @@ def create_dataframe(classes, image_paths, image_shapes):
         'Path': [],
         'Height': [],
         'Width': [],
-        'Shape': []
+        'Shape': [],
+        'Weight': []  # New column for image weights
     }
 
     for class_name in classes:
-        for path, shape in zip(image_paths[class_name], image_shapes[class_name]):
+        for path, shape, weight in zip(image_paths[class_name], image_shapes[class_name], image_weights[class_name]):
             df_data['Class'].append(class_name)
             df_data['Filename'].append(os.path.basename(path))
             df_data['Path'].append(path)
             df_data['Height'].append(shape[0])
             df_data['Width'].append(shape[1])
             df_data['Shape'].append(shape)
+            df_data['Weight'].append(weight)  # Include the image weight
 
     data = pd.DataFrame(df_data)
     return data
-
 def save_dataframe_to_csv(data, filename, folder='Files'):
     """
     Save the DataFrame to a CSV file.
@@ -235,4 +247,21 @@ def display_image_distribution(data_df):
     axs[1].set_xlabel("Class")
 
     plt.tight_layout()
+    plt.show()
+
+def plot_median_weight(classes, data_df):
+    median_weights_per_class = data_df.groupby('Class')['Weight'].median()
+
+    n_classes = len(classes)
+    summer_cmap = plt.colormaps.get_cmap('summer')
+    colors = np.linspace(0.3, 1, n_classes)
+
+    # Create a bar plot
+    plt.figure(figsize=(12, 6))
+    median_weights_per_class.plot(kind='bar', color=summer_cmap(colors))
+    plt.title('Median Weights per Class')
+    plt.xlabel('Class')
+    plt.ylabel('Median Weight (KB)')
+    plt.xticks(rotation=45)
+
     plt.show()
