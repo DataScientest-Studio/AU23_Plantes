@@ -152,11 +152,11 @@ def compute(
 
     else:
         plant_id = st.select_slider("Plant's ID", options=range(len(PATHS)), value=0)
-        st.write("", PLANT_NAMES[plant_id])
+        st.write("Palnt's Name : ", PLANT_NAMES[plant_id])
 
-        threshold = st.select_slider('Threshold', options=[x for x in range(255)], value=(0, 80))
+        threshold = st.select_slider('Pixels threshold', options=[round(x, 2) for x in np.arange(0, 1.005, 0.01)], value=(0, 0.33))
         st.write('range', threshold)
-        threshold = list(threshold)
+        threshold = [int(p * 255) for p in threshold]
 
         col2, col3, col4 = st.columns(3)
 
@@ -169,7 +169,7 @@ def compute(
             st.write('range', (kernel, kernel))
 
         with col4:
-            show_seg = st.checkbox('show segmentation')
+            show_seg = st.checkbox('Show Images')
             st.write('state', show_seg)
 
         img = plt.imread(PATHS[plant_id]).astype("float32")
@@ -201,7 +201,7 @@ def compute(
                 axes[1].imshow(img2rgbLAB[..., 1], interpolation='nearest', cmap=cmap)
                 axes[2].imshow(img_without_bg, interpolation='nearest')
 
-                fig2.suptitle("Background Removal Process", fontsize="x-large")
+                fig2.suptitle(f"{name} : Background Removal Process", fontsize="large", weight="bold")
                 
 
 

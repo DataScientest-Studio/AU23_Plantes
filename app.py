@@ -191,7 +191,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.sidebar.markdown("""
-    #### Dr. Iréné Bérenger AMIEHE ESSOMBA <a href="URL_GITHUB_IRENE" target="_blank"><i class='fab fa-github'></i></a> <a href="URL_LINKEDIN_IRENE" target="_blank"><i class='fab fa-linkedin'></i></a>
+    #### Dr. Iréné AMIEHE ESSOMBA <a href="URL_GITHUB_IRENE" target="_blank"><i class='fab fa-github'></i></a> <a href="URL_LINKEDIN_IRENE" target="_blank"><i class='fab fa-linkedin'></i></a>
     """, unsafe_allow_html=True)
 
     st.sidebar.markdown("""
