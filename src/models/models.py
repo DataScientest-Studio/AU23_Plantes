@@ -134,6 +134,7 @@ class Trainer():
         :return: None
         """
         history1_file, history2_file, model_file = self.get_filenames()
+        model_file = f"./models/records/{self.campaign_id}/{self.record_name}_model.h5"
         self.model = keras.models.load_model(model_file)
         print('++++++model+++',end='')
         with open(history1_file, 'rb') as f:

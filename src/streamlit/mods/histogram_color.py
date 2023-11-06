@@ -84,9 +84,9 @@ def plotly_histogram(
     norm       = ['', 'percent', 'probability', 'density', 'probability', "density"]
     fig = make_subplots(rows=1, cols=3, 
                         subplot_titles=(
-                            'channel 0 (Luminance)', 
-                            'channel 1 (Geen to Magenta)', 
-                            'channel 2 (Blue to Yellow)')
+                            'Luminance', 
+                            'Green to Magenta', 
+                            'Blue to Yellow')
                         )
 
     # Ajoutez les histogrammes sur chaque axe
@@ -151,23 +151,22 @@ def compute(
         fig.show()
 
     else:
-        plant_id = st.select_slider("plant's id", options=range(len(PATHS)), value=0)
-        st.white("plant's name", PLANT_NAMES[plant_id])
+        plant_id = st.select_slider("Plant's ID", options=range(len(PATHS)), value=0)
+        st.write("", PLANT_NAMES[plant_id])
 
-        col1, col2, col3, col4 = st.columns(4)
+        threshold = st.select_slider('Threshold', options=[x for x in range(255)], value=(0, 80))
+        st.write('range', threshold)
+        threshold = list(threshold)
 
-        with col1:
-            threshold = st.select_slider('threshold', options=[x for x in range(255)], value=(0, 80))
-            st.write('range', threshold)
-            threshold = list(threshold)
+        col2, col3, col4 = st.columns(3)
 
         with col2:
-            color = st.selectbox('background color', options=('white', "black"))
-            st.write('selection',  color)
+            color = st.selectbox('Background Color', options=('white', "black"))
+            st.write('',  color)
 
         with col3:
-            kernel = st.slider("kernel", min_value=1, value=1, step=1, max_value=5)
-            st.write('value', (kernel, kernel))
+            kernel = st.slider("Kernel", min_value=1, value=1, step=1, max_value=5)
+            st.write('range', (kernel, kernel))
 
         with col4:
             show_seg = st.checkbox('show segmentation')
@@ -203,6 +202,19 @@ def compute(
                 axes[2].imshow(img_without_bg, interpolation='nearest')
 
                 fig2.suptitle("Background Removal Process", fontsize="x-large")
+                
+
+
+                fig3, axes= plt.subplots(1,3, figsize=(9, 3))
+                titles = ['channel 0', 'channel 1', 'channel 2']
+                for i in range(3):
+                    axes[i].axis('off')
+                    axes[i].set_title(titles[i], fontsize='medium')
+                    axes[i].imshow(img2rgbLAB[..., i], interpolation='nearest', cmap='PuBuGn_r')
+          
+
+                fig3.suptitle(f"{name} : 3-channel image projection in RGB LAB color space'", fontsize="large")
+                #st.pyplot(fig3)
                 st.pyplot(fig2)
 
             

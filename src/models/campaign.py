@@ -38,6 +38,7 @@ class Campaign() :
     def evaluate_and_build_reports(self, gradcam=True) :
         fig_dir = lm.models.FIGURE_DIR
         campaign_dir = f"{fig_dir}/{self.campaign_id}"
+        
         if not os.path.exists(campaign_dir):
             os.makedirs(campaign_dir)
         for model in self.models:
