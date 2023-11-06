@@ -30,6 +30,12 @@ import pickle
 RECORD_DIR: str = "../models/records"
 FIGURE_DIR: str = "../reports/figures"
 
+from numpy.random import seed
+seed(777)
+import tensorflow as tf
+tf.random.set_seed(777)
+
+
 class Trainer():
     #abstract class
     """
