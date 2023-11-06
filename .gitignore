@@ -172,3 +172,9 @@ reports/figures/**
 
 #reports/figures/test
 #reports/figures/temp*
+
+.DS_Store
+**/.DS_Store
+src/streamlit/mods/.DS_Store
+src/streamlit/fichiers/*.h5
+
