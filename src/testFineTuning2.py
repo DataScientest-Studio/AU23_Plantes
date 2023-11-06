@@ -6,6 +6,11 @@ import src.models as lm
 lm.models.RECORD_DIR='../models/records'
 lm.models.FIGURE_DIR='../reports/figures'
 
+from numpy.random import seed
+seed(777)
+import tensorflow as tf
+tf.random.set_seed(777)
+
 #### Data building
 data_wrapper = lf.data_builder.create_dataset_from_directory('../data/v2-plant-seedlings-dataset/')
 
@@ -135,4 +140,4 @@ campaign= lm.campaign.Campaign(campaign_id='test-finetuning2', data_wrapper=data
 #### evaluate
 #### models will be loaded and results saved in FIGURE_DIR/campaign_id
 
-campaign.evaluate_and_build_reports(gradcam=False)
+#campaign.evaluate_and_build_reports(gradcam=False)

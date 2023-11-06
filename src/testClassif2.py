@@ -16,6 +16,11 @@ from keras import Model, Input, Sequential
 from keras.regularizers import l2
 
 
+######set the seeds
+from numpy.random import seed
+seed(777)
+import tensorflow as tf
+tf.random.set_seed(777)
 
 #### Directories
 lm.models.RECORD_DIR='../models/records'
@@ -35,9 +40,9 @@ class TestClassif(lm.models.Trainer):
     lr1=0.001
     epoch1 = 32
     lr_reduction = ReduceLROnPlateau(monitor='val_loss', factor=0.1,
-                                     patience=3,
+                                     patience=5,
                                      verbose=1),
-    stop_callback = EarlyStopping(monitor='val_loss', patience=5,
+    stop_callback = EarlyStopping(monitor='val_loss', patience=10,
                                   restore_best_weights=True, verbose=1)
 
     l2_param = l2(1e-4)
@@ -148,7 +153,7 @@ models = [
     T8
   ]
 
-campaign= lm.campaign.Campaign(campaign_id='test-classif2', data_wrapper=data_wrapper, models=models)
+campaign= lm.campaign.Campaign(campaign_id='test-classifpatient2', data_wrapper=data_wrapper, models=models)
 
 #### train
 #### models will be serialized in RECORD_DIR (launch only once by campaign)

@@ -6,6 +6,12 @@ from src.models.final_test import *
 lm.models.RECORD_DIR = '../models/records'
 lm.models.FIGURE_DIR = '../reports/figures'
 
+from numpy.random import seed
+seed(777)
+import tensorflow as tf
+tf.random.set_seed(777)
+
+
 #### Data building
 data_wrapper = lf.data_builder.create_dataset_from_directory('../data/v2-plant-seedlings-dataset/')
 
@@ -17,18 +23,18 @@ models = [
     stage2.ResNetv2,
     stage3.MobileNetv3,
     stage3.ResNetv2,
-   # stage4.MobileNetv3,
-   # stage4.ResNetv2
+    stage4.MobileNetv3,
+    stage4.ResNetv2
 ]
-campaign = lm.campaign.Campaign(campaign_id='final-test', data_wrapper=data_wrapper, models=models)
+campaign = lm.campaign.Campaign(campaign_id='final-test2', data_wrapper=data_wrapper, models=models)
 
 #### train
 #### models will be serialized in RECORD_DIR (launch only once by campaign)
 
-campaign.train_all()
+#campaign.train_all()
 
 
 #### evaluate
 #### models will be loaded and results saved in FIGURE_DIR/campaign_id
 
-#campaign.evaluate_and_build_reports()
+campaign.evaluate_and_build_reports()
