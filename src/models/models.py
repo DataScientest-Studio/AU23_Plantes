@@ -99,6 +99,10 @@ class Trainer():
                                                                                 self.batch_size, self.data_augmentation,
                                                                                 self.img_size)
 
+    def __str__(self):
+        return self.record_name
+
+
     def serialize(self):
         """
         Serializes the model and history objects to disk.
@@ -271,10 +275,15 @@ class Trainer():
         """
         self.print_step("Evaluation")
         img = load_img(path, target_size=self.img_size)
+        return self.predict_image(img)
+
+    def predict_image(self, img : np.ndarray) -> str:
         img = img_to_array(img)
         img = self.base_model.preprocessing(img)
         pred_vector = self.model.predict(np.expand_dims(img, axis=0))
         return self.data.classes[np.argmax(pred_vector)]
+
+
 
 
     def evaluate(self) -> pd.DataFrame:

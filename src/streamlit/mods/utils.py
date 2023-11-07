@@ -12,6 +12,8 @@ from io import BytesIO
 import os
 import src.features as lf 
 import tensorflow as tf
+import src.models as lm
+
 
 images_especes = "src/streamlit/fichiers/images_especes.png"
 color_palette = px.colors.sequential.speed
@@ -62,12 +64,18 @@ def repartition_especes_images_rgba(data):
     return px.bar(repartition_especes_rgba, x='Classe', y='Nombre', title='Répartition des espèces au sein des images RGBA', color='Classe', color_discrete_sequence=color_palette_b)
 
 @st.cache_resource()
-def load_all_models(model_names):
-    models = {}
-    for model_name in model_names:
-        model_path = os.path.join('models/records/final-test2', model_name)
-        models[model_name] = load_model(model_path)
-    return models
+def load_all_models():
+    data_wrapper = lf.data_builder.create_dataset_from_directory('./data/v2-plant-seedlings-dataset/')
+    trainer_models = [lm.final_test.stage4.MobileNetv3(data_wrapper, 'final-test2'),
+                      lm.final_test.stage4.ResNetv2(data_wrapper, 'final-test2')]
+    for t in trainer_models:
+        t.fit_or_load(training=False)
+    return trainer_models
+    # models = {}
+    # for model_name in model_names:
+    #     model_path = os.path.join('models/records/final-test2', model_name)
+    #     models[model_name] = load_model(model_path)
+    # return models
 
 def preprocess_image(image, target_size=(224, 224), color='white', kernel=2.0, threshold=[0, 80]):
     image = image.resize(target_size)

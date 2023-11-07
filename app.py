@@ -9,13 +9,17 @@ from src.streamlit.mods.histogram_color import compute
 from src.streamlit.mods.utils import *
 from src.streamlit.mods.styles import *
 from src.streamlit.mods.explain import *
+import src.models as lm
 
 st.set_page_config(**page_config)
 load_css('src/streamlit/mods/styles.css')
 
+lm.models.RECORD_DIR='./models/records'
+lm.models.FIGURE_DIR='./reports/figures'
 
-noms_modeles = ['4-dense-Mob_model.h5']  
-modeles = load_all_models(noms_modeles)
+
+
+trainer_modeles = load_all_models()
 
 # Graphs 
 dis_classe = distribution_des_classes(data)
@@ -313,9 +317,8 @@ if choose == "Utilisation du modèle":
     
     aspect_ratio = (1, 1)
     box_color = '#e69138'
-    choix_modele = st.selectbox("Choisissez un modèle", noms_modeles)
-    nom_modele = choix_modele
-    modele = modeles[choix_modele]
+    choix_idx = st.selectbox("Choisissez un modèle", [0,1])
+    choix_modele = trainer_modeles[choix_idx]
     option = st.selectbox("Comment voulez-vous télécharger une image ?", ("Choisir une image de la galerie", "Télécharger une image", "Utiliser une URL"))
     image = None  
     progress_bar = st.progress(0)
@@ -369,14 +372,16 @@ if choose == "Utilisation du modèle":
     col1, col2, col3 = st.columns([1,1,1])
     with col2:
         if st.button("Prédiction", use_container_width=True) and image is not None:
-            processed_image = preprocess_image(image)
+            #processed_image = preprocess_image(image)
             progress_bar = st.progress(0)
             progress_bar.progress(0.3)
-            st.session_state['resultat'] = modele.predict(processed_image)
-            progress_bar.progress(1.0)
-            st.session_state['id_classe_predite'] = np.argmax(st.session_state['resultat'][0])
-            class_mapping = {'Black-grass': 0, 'Charlock': 1, 'Cleavers': 2, 'Common Chickweed': 3, 'Common wheat': 4, 'Fat Hen': 5, 'Loose Silky-bent': 6, 'Maize': 7, 'Scentless Mayweed': 8, "Shepherd's Purse": 9, 'Small-flowered Cranesbill': 10, 'Sugar beet': 11}
-            st.session_state['classe_predite'] = [name for name, id in class_mapping.items() if id == st.session_state['id_classe_predite']][0]
+            # st.session_state['resultat'] = choix_modele.predict_image(image)
+            # progress_bar.progress(1.0)
+            # st.session_state['id_classe_predite'] = np.argmax(st.session_state['resultat'][0])
+            # class_mapping = {'Black-grass': 0, 'Charlock': 1, 'Cleavers': 2, 'Common Chickweed': 3, 'Common wheat': 4, 'Fat Hen': 5, 'Loose Silky-bent': 6, 'Maize': 7, 'Scentless Mayweed': 8, "Shepherd's Purse": 9, 'Small-flowered Cranesbill': 10, 'Sugar beet': 11}
+            # st.session_state['classe_predite'] = [name for name, id in class_mapping.items() if id == st.session_state['id_classe_predite']][0]
+            image = image.resize((224,224))
+            st.session_state['classe_predite'] = choix_modele.predict_image(image)
             time.sleep(3)  
             progress_bar.progress(0)
     if (st.session_state.get('source_image') != 'url'):
