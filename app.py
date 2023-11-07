@@ -14,7 +14,7 @@ st.set_page_config(**page_config)
 load_css('src/streamlit/mods/styles.css')
 
 
-noms_modeles = ['RESNET_CNN4-20231011-004359.h5', 'CNN6-20231007-154745.h5', 'modele_CNN1-2023-10-05_23-38-47.h5']  
+noms_modeles = ['4-dense-Mob_model.h5']  
 modeles = load_all_models(noms_modeles)
 
 # Graphs 

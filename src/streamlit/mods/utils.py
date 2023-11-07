@@ -10,6 +10,8 @@ import numpy as np
 from PIL import Image
 from io import BytesIO
 import os
+import src.features as lf 
+import tensorflow as tf
 
 images_especes = "src/streamlit/fichiers/images_especes.png"
 color_palette = px.colors.sequential.speed
@@ -57,16 +59,46 @@ def repartition_especes_images_rgba(data):
 def load_all_models(model_names):
     models = {}
     for model_name in model_names:
-        model_path = os.path.join('src/streamlit/fichiers/', model_name)
+        model_path = os.path.join('models/records/final-test2', model_name)
         models[model_name] = load_model(model_path)
     return models
 
-def preprocess_image(image, target_size=(150, 150)):
-        image = image.resize(target_size)
-        image = image.convert("RGB")
-        image_np = img_prep.img_to_array(image) / 255.0  # Rescale
-        image_np = np.expand_dims(image_np, axis=0)
-        return image_np
+def preprocess_image(image, target_size=(224, 224), color='white', kernel=2.0, threshold=[0, 80]):
+    image = image.resize(target_size)
+    image = np.array(image.convert("RGB")).astype('float32')
+    
+    if image.dtype == 'float32':
+        norm=True
+        img_without_bg = (image - np.min(image)) / (np.max(image) - np.min(image))
+
+    img_without_bg = lf.segmentation.remove_background(
+                        x=tf.constant(img_without_bg, dtype=tf.float32), 
+                        color=color, radius=kernel,
+                        threshold=threshold
+                     )
+
+    if norm:
+        image = img_without_bg * (np.max(image) - np.min(image)) + np.min(image)
+
+    if isinstance(image, tf.Tensor):
+        image = image.numpy()
+        if image.ndim == 4 and img_without_bg.shape[0] == 1:
+            image = np.squeeze(img_without_bg, axis=0)
+
+    if image.ndim == 2:
+        image = np.expand_dims(img_without_bg, axis=-1)
+
+    image = np.expand_dims(img_without_bg, axis=0)
+    st.image(image)
+    return image
+
+#def preprocess_image_safe(image, target_size=(150, 150)):
+#        image = image.resize(target_size)
+ #       image = image.convert("RGB")
+  #      image_np = img_prep.img_to_array(image) / 255.0  
+   #     image_np = np.expand_dims(image_np, axis=0)
+    #    return image_np
+
 
 def enregistrer_feedback_pandas(url, classe_predite, bonne_classe, nom_modele):
     file_path = os.path.join('src', 'streamlit', 'fichiers', 'feedback', 'feedback.csv')
