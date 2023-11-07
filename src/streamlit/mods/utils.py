@@ -15,9 +15,12 @@ import tensorflow as tf
 
 images_especes = "src/streamlit/fichiers/images_especes.png"
 color_palette = px.colors.sequential.speed
+color_palette_b = ['#E9D98B', '#66940A']
 data = pd.read_csv("src/streamlit/fichiers/dataset_plantes.csv")
 feedbacks = "src/streamlit/fichiers/feedback/feedback.csv"
 especes = list(data['Classe'].unique())
+
+data['Ratio'] = data['Largeur'] / data['Hauteur']
 
 def load_css(file_name):
     with open(file_name, "r") as f:
@@ -29,11 +32,12 @@ def distribution_des_classes(data):
 
 @st.cache_data
 def poids_median_resolution(data):
-    df_median = data.groupby('Classe')['Résolution'].median().reset_index()
-    return px.bar(df_median, x='Classe', y='Résolution', title="Résolution médiane des images selon l'espèce", color='Classe', color_discrete_sequence=color_palette)
-
+    df_median = data.groupby('Classe')['Poids'].median().reset_index()
+    return px.bar(df_median, x='Classe', y='Poids', title="Poids médian des images par classe", labels={'Poids': 'Poids Médian'}, color='Classe', color_discrete_sequence=color_palette)
+    
 @st.cache_data
 def ratios_images(data):
+    data['Ratio'] = data['Largeur'] / data['Hauteur']
     bins = [0, 0.90, 0.95, 0.99, 1.01, 1.05, max(data['Ratio']) + 0.01]
     bin_labels = ['<0.90', '0.90-0.94', '0.95-0.99', '1', '1.01-1.04', '>1.05']
     data['Ratio_cat'] = pd.cut(data['Ratio'], bins=bins, labels=bin_labels, right=False)
@@ -42,18 +46,20 @@ def ratios_images(data):
 
 @st.cache_data
 def repartition_rgb_rgba(data):
-    compte_rgba = data[data["Canaux"] == 4].shape[0]
-    compte_rgb = data[data["Canaux"] == 3].shape[0]
+    data['Canaux'] = data['Forme'].str.extract(r'\((?:\d+, ){2}(\d+)\)')[0].astype(int)
+    compte_rgb = (data['Canaux'] == 3).sum()
+    compte_rgba = (data['Canaux'] == 4).sum()
     valeurs = [compte_rgb, compte_rgba]
     etiquettes = ["RGB", "RGBA"]
-    return px.pie(values=valeurs, names=etiquettes, title="Répartition des images en RGB et RGBA", color=etiquettes, color_discrete_sequence=color_palette)
+    return px.pie(values=valeurs, names=etiquettes, title="Répartition des images en RGB et RGBA", color_discrete_sequence=color_palette_b)
 
 @st.cache_data
 def repartition_especes_images_rgba(data):
+    data['Canaux'] = data['Forme'].str.extract(r'\((?:\d+, ){2}(\d+)\)')[0].astype(int)
     donnees_rgba = data[data["Canaux"] == 4]
     repartition_especes_rgba = donnees_rgba['Classe'].value_counts().reset_index()
     repartition_especes_rgba.columns = ['Classe', 'Nombre']
-    return px.bar(repartition_especes_rgba, x='Classe', y='Nombre', title='Répartition des espèces au sein des images RGBA', color='Classe', color_discrete_sequence=color_palette)
+    return px.bar(repartition_especes_rgba, x='Classe', y='Nombre', title='Répartition des espèces au sein des images RGBA', color='Classe', color_discrete_sequence=color_palette_b)
 
 @st.cache_resource()
 def load_all_models(model_names):
