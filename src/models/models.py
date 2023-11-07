@@ -384,4 +384,3 @@ class Trainer():
         plot = lv.graphs.plot_confusion_matrix(self.results, self.record_name, show = (not save))
         if (save) :
             self.save_fig(plot, f"confusion_matrix.png")
-

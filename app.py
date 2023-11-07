@@ -14,10 +14,8 @@ import src.models as lm
 st.set_page_config(**page_config)
 load_css('src/streamlit/mods/styles.css')
 
-lm.models.RECORD_DIR='./models/records'
-lm.models.FIGURE_DIR='./reports/figures'
-
-
+lm.models.RECORD_DIR='models/records'
+lm.models.FIGURE_DIR='reports/figures'
 
 trainer_modeles = load_all_models()
 
@@ -306,10 +304,6 @@ if choose == "Modélisation":
 if choose == "Utilisation du modèle":
     if 'classe_predite' not in st.session_state:
         st.session_state['classe_predite'] = None
-    if 'resultat' not in st.session_state:
-        st.session_state['resultat'] = None
-    if 'id_classe_predite' not in st.session_state:
-        st.session_state['id_classe_predite'] = None
     if "mauvaise_pred" not in st.session_state:
         st.session_state['mauvaise_pred'] = False
     if 'feedback_soumis' not in st.session_state:
@@ -317,8 +311,11 @@ if choose == "Utilisation du modèle":
     
     aspect_ratio = (1, 1)
     box_color = '#e69138'
-    choix_idx = st.selectbox("Choisissez un modèle", [0,1])
+    modeles = {'Modèle MobileNetV3Large': 0, 'Modèle ResNet50V2': 1}
+    choix_nom_modele = st.selectbox("Choisissez un modèle", list(modeles.keys()))
+    choix_idx = modeles[choix_nom_modele]
     choix_modele = trainer_modeles[choix_idx]
+
     option = st.selectbox("Comment voulez-vous télécharger une image ?", ("Choisir une image de la galerie", "Télécharger une image", "Utiliser une URL"))
     image = None  
     progress_bar = st.progress(0)
@@ -372,34 +369,27 @@ if choose == "Utilisation du modèle":
     col1, col2, col3 = st.columns([1,1,1])
     with col2:
         if st.button("Prédiction", use_container_width=True) and image is not None:
-            #processed_image = preprocess_image(image)
             progress_bar = st.progress(0)
             progress_bar.progress(0.3)
-            # st.session_state['resultat'] = choix_modele.predict_image(image)
-            # progress_bar.progress(1.0)
-            # st.session_state['id_classe_predite'] = np.argmax(st.session_state['resultat'][0])
-            # class_mapping = {'Black-grass': 0, 'Charlock': 1, 'Cleavers': 2, 'Common Chickweed': 3, 'Common wheat': 4, 'Fat Hen': 5, 'Loose Silky-bent': 6, 'Maize': 7, 'Scentless Mayweed': 8, "Shepherd's Purse": 9, 'Small-flowered Cranesbill': 10, 'Sugar beet': 11}
-            # st.session_state['classe_predite'] = [name for name, id in class_mapping.items() if id == st.session_state['id_classe_predite']][0]
             image = image.resize((224,224))
             st.session_state['classe_predite'] = choix_modele.predict_image(image)
+            progress_bar.progress(1.0)
             time.sleep(3)  
             progress_bar.progress(0)
     if (st.session_state.get('source_image') != 'url'):
-        if (st.session_state['classe_predite'] is not None and st.session_state['resultat'] is not None): 
+        if (st.session_state['classe_predite'] is not None): 
             with feedback_placeholder.container():
-                st.markdown(f"Selon le modèle, il s'agit de l'espèce **{st.session_state['classe_predite']}** avec une précision de : **{st.session_state['resultat'][0][st.session_state['id_classe_predite']]*100:.2f}%**")
+                st.markdown(f"Selon le modèle, il s'agit de l'espèce **{st.session_state['classe_predite']}**")
                 reset_state()
-    if (st.session_state['classe_predite'] is not None and st.session_state['resultat'] is not None and not st.session_state['feedback_soumis'] and st.session_state.get('source_image') == 'url'):
+    if (st.session_state['classe_predite'] is not None and not st.session_state['feedback_soumis'] and st.session_state.get('source_image') == 'url'):
         with feedback_placeholder.container():
-            st.markdown(f"Selon le modèle, il s'agit de l'espèce **{st.session_state['classe_predite']}** avec une précision de : **{st.session_state['resultat'][0][st.session_state['id_classe_predite']]*100:.2f}%**")
+            st.markdown(f"Selon le modèle, il s'agit de l'espèce **{st.session_state['classe_predite']}**")
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("Correcte"):
-                    enregistrer_feedback_pandas(url, st.session_state['classe_predite'], st.session_state['classe_predite'], nom_modele)
+                    enregistrer_feedback_pandas(url, st.session_state['classe_predite'], st.session_state['classe_predite'], trainer_modeles[choix_idx])
                     st.session_state['feedback_soumis'] = False
                     st.session_state['classe_predite'] = None
-                    st.session_state['resultat'] = None
-                    st.session_state['id_classe_predite'] = None
             with col2:
                 if st.button("Incorrecte"):
                     st.session_state['mauvaise_pred'] = True
@@ -408,7 +398,7 @@ if choose == "Utilisation du modèle":
                 bonne_classe = st.multiselect("Précisez la bonne classe :", especes)
                 if st.button('Confirmer la classe'):
                     if bonne_classe:
-                        enregistrer_feedback_pandas(url, st.session_state['classe_predite'], bonne_classe[0], nom_modele)
+                        enregistrer_feedback_pandas(url, st.session_state['classe_predite'], bonne_classe[0], trainer_modeles[choix_idx])
                         time.sleep(3)
                         feedback_placeholder.empty()
                         reset_state()
@@ -416,11 +406,23 @@ if choose == "Utilisation du modèle":
                         st.error("Veuillez sélectionner une classe avant de confirmer.")
 if choose == "Conclusion":
     st.write("### Conclusion")
-    tab_titles = [f"Modèle {noms_modeles[i]}" for i in range(len(noms_modeles))]
+    nom_des_modeles = {
+        'MobileNetv3': '4-dense-Mob',
+        'ResNetv2': '4-dense-Res'
+    }
+
+    tab_titles = [f"Modèle {nom_des_modeles.get(type(model).__name__, 'Inconnu')}" for model in trainer_modeles]
     tabs = st.tabs(tab_titles)
-    for i, tab in enumerate(tabs):
+
+    for model, tab in zip(trainer_modeles, tabs):
         with tab:
-            model_name = noms_modeles[i]
-            conf_matrix = pred_confusion_matrix(feedbacks, especes, model_name)
+            model_class_name = type(model).__name__
+            model_name_csv = nom_des_modeles.get(model_class_name, 'Inconnu')
+
+            if model_name_csv == 'Inconnu':
+                st.error(f"Le nom du modèle pour la classe {model_class_name} est inconnu.")
+                continue
+
+            conf_matrix = pred_confusion_matrix(feedbacks, especes, model_name_csv)
             fig = plot_confusion_matrix(conf_matrix, especes)
             st.pyplot(fig)
