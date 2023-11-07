@@ -119,7 +119,7 @@ def display_results(results: pd.DataFrame, nb: int = 15, gradcam: bool = False, 
     """
 
     results_df = results.reset_index(drop=True)
-
+    if gradcam : nb= nb*2
     #nb += 6
     if nb <= 6:
         nrows, ncols = 1, nb 
