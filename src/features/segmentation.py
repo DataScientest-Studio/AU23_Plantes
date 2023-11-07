@@ -103,7 +103,8 @@ class ImageProcess:
     def Segmentation(self,
                     upper_color : list[int, int, int], 
                     lower_color : list[int, int, int],
-                    value       : list[float, float, float] = [1., 1., 1.]
+                    value       : list[float, float, float] = [1., 1., 1.],
+                    mask        : bool = False
                     ) -> np.ndarray :
         
         """
@@ -147,9 +148,11 @@ class ImageProcess:
         else:  
             # if image not in [white, black]
             self.new_img = None 
-            
-        return self.new_img
-    
+
+        if not mask :   
+            return self.new_img
+        else: 
+            return self.new_img, self.mask
 class FinalProcess(ImageProcess):
     def __init__(self, 
                 threshold   : list[int, int]  = [0, 80], # list of values extracted from histogram colors 
@@ -167,7 +170,8 @@ class FinalProcess(ImageProcess):
             x           : any,
             upper_color : list[int, int, int]       = [30, 30, 30],  
             lower_color : list[int, int, int]       = [0, 0, 0],
-            value       : list[float, float, float] = [1., 1., 1.]
+            value       : list[float, float, float] = [1., 1., 1.],
+            mask        : bool =False
             ) -> np.ndarray:
         
         """
@@ -213,16 +217,21 @@ class FinalProcess(ImageProcess):
         # creating a tuple for the next process
         self.images         = (self.image, self.image_lab)
         # running process 
-        self.image          = self.Segmentation(upper_color, lower_color, value)
-
+        if not mask:
+            self.image          = self.Segmentation(upper_color, lower_color, value, mask=mask)
+        else:
+            self.image, self.Mask = self.Segmentation(upper_color, lower_color, value, mask=mask)
         try:
             # converting image format from numpy array type to tf.tensor 
             if self.is_numpy_array is False:
                 self.x = tf.constant(self.image, dtype=self.dtype, shape=self.SHAPE)
             else:
                 self.x = self.image.astype(self.dtype).reshape(self.SHAPE)
-            # returning return 
-            return self.x
+            if not mask:
+                # returning return 
+                return self.x
+            else:
+                return self.x, self.Mask
         except TypeError:
             raise ValueError("None type cannot be converted in tensorflow tensor.\
                     Please check the color or lower and upper range values and try again")
@@ -320,7 +329,8 @@ def remove_background(
         x           : any, 
         color       : str   = 'white', 
         radius      : float = 4.,
-        threshold   : list[int, int] = [0, 80]
+        threshold   : list[int, int] = [0, 80],
+        mask        : bool = False
         ) -> np.ndarray:
 
 
@@ -328,6 +338,6 @@ def remove_background(
         threshold   =threshold,
         color       =color, 
         radius      =radius
-        ).imgSegmentation(x=x)
+        ).imgSegmentation(x=x, mask=mask)
     
     return x

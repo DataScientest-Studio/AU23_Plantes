@@ -149,6 +149,25 @@ def compute(
 
         fig = plotly_histogram(channels=channels, size=size, opacity=opacity, name=name)
         fig.show()
+        
+        img_without_bg, mask = lf.segmentation.\
+                    remove_background(
+                        x=tf.constant(img, dtype=tf.float32), radius=4, mask=True )
+        
+        cmap = get_cmap_list()
+        fig2, axes= plt.subplots(1,4, figsize=(12, 3))
+        titles = ['Original Image, in RGB space', 'RGB LAB color space', 'Mask', 'Image-Segmentation']
+        for i in range(4):
+            axes[i].axis('off')
+            axes[i].set_title(titles[i], fontsize='medium')
+
+        axes[0].imshow(img, interpolation='nearest')
+        axes[1].imshow(img2rgbLAB[..., 1], interpolation='nearest', cmap=cmap)
+        axes[2].imshow(mask, interpolation='nearest')
+        axes[3].imshow(img_without_bg, interpolation='nearest')
+
+        fig2.suptitle(f"{name} : Background Removal Process", fontsize="large", weight="bold")
+        plt.show()
 
     else:
         plant_id = st.select_slider("Plant's ID", options=range(len(PATHS)), value=0)
@@ -178,11 +197,11 @@ def compute(
         img2rgbLAB = lf.segmentation.RGB2LAB_SPACE(image=img.copy())
         channels = [img2rgbLAB[..., j].ravel() * scaling_factor for j in range(3)] 
 
-        img_without_bg = lf.segmentation.\
+        img_without_bg, mask = lf.segmentation.\
                     remove_background(
                         x=tf.constant(img, dtype=tf.float32), 
                         color=color, radius=kernel,
-                        threshold=threshold
+                        threshold=threshold, mask=True
                         )
 
         if st.button('run'):
@@ -191,30 +210,18 @@ def compute(
 
             if show_seg:
                 cmap = get_cmap_list()
-                fig2, axes= plt.subplots(1,3, figsize=(9, 3))
-                titles = ['Original Image, in RGB space', 'RGB LAB color space', 'Image-Segmentation']
-                for i in range(3):
+                fig2, axes= plt.subplots(1,4, figsize=(12, 3))
+                titles = ['Original Image, in RGB space', 'RGB LAB color space', 'Mask', 'Image-Segmentation']
+                for i in range(4):
                     axes[i].axis('off')
                     axes[i].set_title(titles[i], fontsize='medium')
 
                 axes[0].imshow(img, interpolation='nearest')
                 axes[1].imshow(img2rgbLAB[..., 1], interpolation='nearest', cmap=cmap)
-                axes[2].imshow(img_without_bg, interpolation='nearest')
+                axes[2].imshow(mask, interpolation='nearest')
+                axes[3].imshow(img_without_bg, interpolation='nearest')
 
                 fig2.suptitle(f"{name} : Background Removal Process", fontsize="large", weight="bold")
-                
-
-
-                fig3, axes= plt.subplots(1,3, figsize=(9, 3))
-                titles = ['channel 0', 'channel 1', 'channel 2']
-                for i in range(3):
-                    axes[i].axis('off')
-                    axes[i].set_title(titles[i], fontsize='medium')
-                    axes[i].imshow(img2rgbLAB[..., i], interpolation='nearest', cmap='PuBuGn_r')
-          
-
-                fig3.suptitle(f"{name} : 3-channel image projection in RGB LAB color space'", fontsize="large")
-                #st.pyplot(fig3)
                 st.pyplot(fig2)
 
             
