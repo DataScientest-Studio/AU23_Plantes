@@ -48,7 +48,7 @@ def setup_sidebar():
         """, unsafe_allow_html=True)
 
         st.sidebar.markdown("""
-        #### Olivier MOTELET <a href="URL_GITHUB_OLIVIER" target="_blank"><i class='fab fa-github'></i></a>  <a href="URL_LINKEDIN_OLIVIER" target="_blank"><i class='fab fa-linkedin'></i></a>
+        #### Olivier MOTELET <a href="https://github.com/nagoli" target="_blank"><i class='fab fa-github'></i></a>  <a href="https://www.linkedin.com/in/oli-mo-ux/" target="_blank"><i class='fab fa-linkedin'></i></a>
         """, unsafe_allow_html=True)
         st.write("""
 
