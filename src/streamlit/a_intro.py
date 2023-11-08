@@ -1,4 +1,6 @@
-def content(st) :
+import streamlit as st
+
+def content() :
     st.title("FloraFlow : cultivez mieux avec l'IA")
     st.markdown("""
             <p class="text-justify">
@@ -33,4 +35,3 @@ def content(st) :
             Notre objectif final est de fournir les bases d’un outil robuste pour la classification des plantes, offrant ainsi aux agriculteurs des moyens plus efficaces de gérer leurs cultures.
             </p>
             """, unsafe_allow_html=True)
-    return st

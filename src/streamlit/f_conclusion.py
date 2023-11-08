@@ -1,10 +1,10 @@
 
-
+import streamlit as st
 from src.streamlit.mods.utils import *
 from src.streamlit.mods.styles import *
 from src.streamlit.mods.explain import *
 
-def content(st, trainer_modeles) :
+def content( trainer_modeles) :
     st.write("### Conclusion")
     nom_des_modeles = {
         'MobileNetv3': '4-dense-Mob',
@@ -27,4 +27,3 @@ def content(st, trainer_modeles) :
             fig = plot_confusion_matrix(conf_matrix, especes)
             st.pyplot(fig)
 
-    return st

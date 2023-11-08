@@ -1,4 +1,4 @@
-
+import streamlit as st
 from src.streamlit.mods.utils import *
 from src.streamlit.mods.styles import *
 from src.streamlit.mods.explain import *
@@ -11,7 +11,7 @@ diagramme_rgba = repartition_rgb_rgba(data)
 histogramme = repartition_especes_images_rgba(data)
 
 
-def content(st) :
+def content() :
     st.header("Exploration du jeu de données")
     st.markdown("""
     <div class="text-justify">
@@ -139,4 +139,3 @@ def content(st) :
     - La grande majorité des images est en format RGB. Seules quelques unes (0,433%) sont en format RGBA. 
     - Il y a un déséquilibre des classes qu'il faudra prendre en compte lors de la modélisation
     """)
-    return st

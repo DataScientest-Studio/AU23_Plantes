@@ -1,10 +1,14 @@
+import streamlit as st
+from src.streamlit.mods.utils import get_plotly_html
 
-
-def content(st):
+def content():
     st.header("Approche de modélisation")
     st.markdown("""
        <div class="text-justify">
-           Étant donné nos capacités de traitement des données (machines personnelles), nous nous sommes concentrés sur des modèles de type CNN. Cette phase de modélisation comprend une série d’étapes et de choix :
+           Lors de cette étude, nous avons rencontrés de nombreux problèmes : 
+             <ul>
+               <li>limitation des machines,</li>
+                hétérogénité des méthodes utiliséqÉtant donné nos capacités de traitement des données (machines personnelles), nous nous sommes concentrés sur des modèles de type CNN. Cette phase de modélisation comprend une série d’étapes et de choix :
            <ul>
                <li>Préparation des données,</li>
                <li>Choix du CNN,</li>
@@ -109,4 +113,3 @@ def content(st):
 
     plotly1 = "src/streamlit/fichiers/test2.html"
     st.components.v1.html(get_plotly_html(plotly1), height=600)
-    return st

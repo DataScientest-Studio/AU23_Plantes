@@ -1,3 +1,4 @@
+import streamlit as st
 import time
 import requests
 from src.streamlit.mods.utils import *
@@ -7,7 +8,7 @@ import src.models as lm
 import streamlit.components.v1 as html
 from streamlit_cropper import st_cropper
 
-def content(st, trainer_modeles) :
+def content(trainer_modeles) :
     trainer_modeles = load_all_models()
     if 'classe_predite' not in st.session_state:
         st.session_state['classe_predite'] = None
@@ -118,4 +119,3 @@ def content(st, trainer_modeles) :
                     else:
                         st.error("Veuillez sélectionner une classe avant de confirmer.")
 
-    return st
