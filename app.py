@@ -9,7 +9,6 @@ from src.streamlit.mods.utils import *
 from src.streamlit.mods.styles import *
 from src.streamlit.mods.explain import *
 import src.models as lm
-import streamlit.components.v1 as html
 
 st.set_page_config(**page_config)
 load_css('src/streamlit/mods/styles.css')
@@ -27,22 +26,22 @@ trainer_modeles = load_all_models()
 choose = setup_sidebar()
 # PAGES
 
-from src.streamlit import *
+import src.streamlit as ls
 
 if choose == "Introduction":
-    a_intro.content(st)
+    ls.a_intro.content(st)
 
 if choose == "Jeux de données":
-    b_dataset.content(st)
+    ls.b_dataset.content(st)
 
 if choose == "Modélisation":
-   c_modelisation.content(st)
+   ls.c_modelisation.content(st)
 
 if choose == "Interprétabilité et Segmentation" :
-    d_segmentation.content(st)
+    ls.d_segmentation.content(st)
 
 if choose == "Utilisation du modèle":
-    e_demo.content(st,trainer_modeles)
+    ls.e_demo.content(st,trainer_modeles)
 
 if choose == "Conclusion":
-    f_conclusion.content(st,trainer_modeles)
+    ls.f_conclusion.content(st,trainer_modeles)
