@@ -55,6 +55,29 @@ class ImageDataWrapper() :
         self.nb_classes = nb_classes
         self.weights = weights
 
+class VoidSeedlingImageDataWrapper(ImageDataWrapper) :
+    def __init__(self) :
+        self.classes =[
+         'Black-grass',
+         'Charlock',
+         'Cleavers',
+         'Common Chickweed',
+         'Common wheat',
+         'Fat Hen',
+         'Loose Silky-bent',
+         'Maize',
+         'Scentless Mayweed',
+         'Shepherd’s Purse',
+         'Small-flowered Cranesbill',
+         'Sugar beet'
+        ]
+        self.nb_classes = len(self.classes)
+        self.dataframe = None
+        self.train_df = None
+        self.test_df = None
+        self.weights = None
+
+
 def create_dataset_from_directory (data_dir: str = data_dir,  train_size: float = 0.9, shuffle: bool = True,) -> ImageDataWrapper:
     """
     Creates a dataset from the given data directory.

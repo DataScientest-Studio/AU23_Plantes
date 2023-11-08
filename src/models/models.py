@@ -84,8 +84,9 @@ class Trainer():
     campaign_id: str = None
 
     def get_best_models_callback(self):
-        #_,_,file = self.get_filenames()
-        file = f"./models/records/test/{self.campaign_id}/{self.record_name}_model.h5"
+        _,_,file = self.get_filenames()
+        # Merci de ne pas faire ce qui est commenté mais de changer le chemin : lm.models.RECORD_DIR="./models/records"  dans le votre fichier principal
+        # file = f"./models/records/test/{self.campaign_id}/{self.record_name}_model.h5"
         return tf.keras.callbacks.\
                 ModelCheckpoint(filepath=file,
                         monitor="val_categorical_accuracy", verbose=1, save_best_only=True)
@@ -95,7 +96,8 @@ class Trainer():
         self.campaign_id = campaign_id
         self.data = data_wrapper
         # build data flows
-        self.train, self.validation, self.test = lf.data_builder.get_data_flows(self.data, self.base_model,
+        if data_wrapper.train_df is not None:
+            self.train, self.validation, self.test = lf.data_builder.get_data_flows(self.data, self.base_model,
                                                                                 self.batch_size, self.data_augmentation,
                                                                                 self.img_size)
 
@@ -144,7 +146,7 @@ class Trainer():
         :return: None
         """
         history1_file, history2_file, model_file = self.get_filenames()
-        # TODO voir pourquoi ce changement ????
+        # Merci de ne pas faire ce qui est commenté mais de changer le chemin : lm.models.RECORD_DIR="./models/records"  dans le votre fichier principal
         #model_file = f"./models/records/{self.campaign_id}/{self.record_name}_model.h5"
         self.model = keras.models.load_model(model_file)
         print('++++++model+++',end='')

@@ -65,9 +65,8 @@ def repartition_especes_images_rgba(data):
 
 @st.cache_resource()
 def load_all_models():
-    data_wrapper = lf.data_builder.create_dataset_from_directory('./data/v2-plant-seedlings-dataset/')
-    trainer_models = [lm.final_test.stage4.MobileNetv3(data_wrapper, 'final-test2'),
-                      lm.final_test.stage4.ResNetv2(data_wrapper, 'final-test2')]
+    trainer_models = [lm.final_test.stage4.MobileNetv3(lf.data_builder.VoidSeedlingImageDataWrapper(), 'final-test2'),
+                      lm.final_test.stage4.ResNetv2(lf.data_builder.VoidSeedlingImageDataWrapper(), 'final-test2')]
     for t in trainer_models:
         t.fit_or_load(training=False)
     return trainer_models
