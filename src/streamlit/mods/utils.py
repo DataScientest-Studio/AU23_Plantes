@@ -72,16 +72,22 @@ def load_all_models():
     return trainer_models
 
 
-def enregistrer_feedback_pandas(url, classe_predite, bonne_classe, nom_modele):
+def enregistrer_feedback_pandas(image_info, classe_predite, bonne_classe, nom_modele):
     file_path = os.path.join('src', 'streamlit', 'fichiers', 'feedback', 'feedback.csv')
-    df = pd.DataFrame([[url, classe_predite, bonne_classe, nom_modele]], columns=['URL', 'Classe Predite', 'Bonne Classe', 'Modèle Utilisé'])
+    
+    url = image_info if isinstance(image_info, str) and image_info.startswith('http') else None
+    df = pd.DataFrame([[url, classe_predite, bonne_classe, nom_modele]], 
+                      columns=['URL', 'Classe Predite', 'Bonne Classe', 'Modèle Utilisé'])
+    
     if os.path.isfile(file_path):
         df_existante = pd.read_csv(file_path)
         df_finale = pd.concat([df_existante, df], ignore_index=True)
     else:
         df_finale = df
+    
     df_finale.to_csv(file_path, index=False)
     st.success('Feedback enregistré avec succès !')
+
 
 def reset_state():
     st.session_state['feedback_soumis'] = False

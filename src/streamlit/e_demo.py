@@ -5,18 +5,12 @@ from src.streamlit.mods.utils import *
 from src.streamlit.mods.styles import *
 from src.streamlit.mods.explain import *
 import src.models as lm
-import streamlit.components.v1 as html
 from streamlit_cropper import st_cropper
 
 def content(trainer_modeles) :
+    url = None
+    selected_image = None
     trainer_modeles = load_all_models()
-    if 'classe_predite' not in st.session_state:
-        st.session_state['classe_predite'] = None
-    if "mauvaise_pred" not in st.session_state:
-        st.session_state['mauvaise_pred'] = False
-    if 'feedback_soumis' not in st.session_state:
-        st.session_state['feedback_soumis'] = False
-
     aspect_ratio = (1, 1)
     box_color = '#e69138'
     modeles = {'Modèle MobileNetV3Large': 0, 'Modèle ResNet50V2': 1}
@@ -87,35 +81,32 @@ def content(trainer_modeles) :
             progress_bar.progress(1.0)
             time.sleep(3)
             progress_bar.progress(0)
-    if (st.session_state.get('source_image') != 'url'):
-        if (st.session_state['classe_predite'] is not None):
-            with feedback_placeholder.container():
+    with feedback_placeholder.container():
+            if st.session_state['classe_predite'] is not None:
                 st.markdown(f"Selon le modèle, il s'agit de l'espèce **{st.session_state['classe_predite']}**")
-                reset_state()
-    if (st.session_state['classe_predite'] is not None and not st.session_state[
-        'feedback_soumis'] and st.session_state.get('source_image') == 'url'):
-        with feedback_placeholder.container():
-            st.markdown(f"Selon le modèle, il s'agit de l'espèce **{st.session_state['classe_predite']}**")
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("Correcte"):
-                    enregistrer_feedback_pandas(url, st.session_state['classe_predite'],
-                                                st.session_state['classe_predite'], trainer_modeles[choix_idx])
-                    st.session_state['feedback_soumis'] = False
-                    st.session_state['classe_predite'] = None
-            with col2:
-                if st.button("Incorrecte"):
-                    st.session_state['mauvaise_pred'] = True
-            if st.session_state['mauvaise_pred']:
-                especes = list(data['Classe'].unique())
-                bonne_classe = st.multiselect("Précisez la bonne classe :", especes)
-                if st.button('Confirmer la classe'):
-                    if bonne_classe:
-                        enregistrer_feedback_pandas(url, st.session_state['classe_predite'], bonne_classe[0],
-                                                    trainer_modeles[choix_idx])
-                        time.sleep(3)
-                        feedback_placeholder.empty()
-                        reset_state()
-                    else:
-                        st.error("Veuillez sélectionner une classe avant de confirmer.")
-
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("Correcte"):
+                        # Handle feedback for both URL and non-URL sources
+                        image_info = url if st.session_state.get('source_image') == 'url' else selected_image
+                        enregistrer_feedback_pandas(image_info, st.session_state['classe_predite'],
+                                                    st.session_state['classe_predite'], trainer_modeles[choix_idx])
+                        st.session_state['feedback_soumis'] = True
+                        st.session_state['classe_predite'] = None
+                with col2:
+                    if st.button("Incorrecte"):
+                        st.session_state['mauvaise_pred'] = True
+                if st.session_state.get('mauvaise_pred'):
+                    especes = list(data['Classe'].unique())
+                    bonne_classe = st.multiselect("Précisez la bonne classe :", especes)
+                    if st.button('Confirmer la classe'):
+                        if bonne_classe:
+                            # Handle feedback for both URL and non-URL sources
+                            image_info = url if st.session_state.get('source_image') == 'url' else selected_image
+                            enregistrer_feedback_pandas(image_info, st.session_state['classe_predite'], bonne_classe[0],
+                                                        trainer_modeles[choix_idx])
+                            time.sleep(3)
+                            feedback_placeholder.empty()
+                            reset_state()
+                        else:
+                            st.error("Veuillez sélectionner une classe avant de confirmer.")

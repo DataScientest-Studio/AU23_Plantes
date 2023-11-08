@@ -44,6 +44,12 @@ if choose == "Interprétabilité et Segmentation" :
     ls.d_segmentation.content()
 
 if choose == "Utilisation du modèle":
+    if 'classe_predite' not in st.session_state:
+        st.session_state['classe_predite'] = None
+    if "mauvaise_pred" not in st.session_state:
+        st.session_state['mauvaise_pred'] = False
+    if 'feedback_soumis' not in st.session_state:
+        st.session_state['feedback_soumis'] = False
     ls.e_demo.content(trainer_modeles)
 
 if choose == "Conclusion":

@@ -16,12 +16,12 @@ def setup_sidebar():
         col1, col2, col3 = st.columns([0.2,0.7,0.2])
         with col2 : 
             st.image(logo)  
-        choose = option_menu("", ["Introduction", "Jeux de données",  "Modélisation", "Interprétabilité et Segmentation","Utilisation du modèle", "Conclusion"],
-                            icons=['arrow-repeat', 'database',  'box', 'eyedropper', 'cloud-download', 'check-circle'],
+        choose = option_menu("", ["Introduction", "Jeux de données",  "Modélisation", "Interprétabilité & Segmentation","Utilisation du modèle", "Conclusion"],
+                            icons=['arrow-repeat', 'database',  'box', 'layers-half', 'cloud-download', 'check-circle'],
                             default_index=0,
                             styles={
-            "container": {"padding": "5!important", "background-color": "#fafafa"},
-            "icon": {"color": "orange", "font-size": "25px"}, 
+            "container": {"padding": "1!important", "background-color": "#fafafa"},
+            "icon": {"color": "orange", "font-size": "24px"}, 
             "nav-link": {"font-size": "16px", "text-align": "left", "margin":"0px", "--hover-color": "#eee"},
             "nav-link-selected": {"background-color": "#02ab21"},
         }
