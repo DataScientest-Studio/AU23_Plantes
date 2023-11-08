@@ -153,15 +153,15 @@ models = [
     T8
   ]
 
-campaign= lm.campaign.Campaign(campaign_id='test-classifpatient2', data_wrapper=data_wrapper, models=models)
+campaign= lm.campaign.Campaign(campaign_id='test-classifpatient', data_wrapper=data_wrapper, models=models)
 
 #### train
 #### models will be serialized in RECORD_DIR (launch only once by campaign)
 
-campaign.train_all()
+#campaign.train_all()
 
 
 #### evaluate
 #### models will be loaded and results saved in FIGURE_DIR/campaign_id
 
-#campaign.evaluate_and_build_reports()
+campaign.evaluate_and_build_reports()

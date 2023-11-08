@@ -140,4 +140,4 @@ campaign= lm.campaign.Campaign(campaign_id='test-finetuning2', data_wrapper=data
 #### evaluate
 #### models will be loaded and results saved in FIGURE_DIR/campaign_id
 
-#campaign.evaluate_and_build_reports(gradcam=False)
+campaign.evaluate_and_build_reports(gradcam=False)

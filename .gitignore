@@ -166,12 +166,20 @@ cython_debug/
 data/
 
 # test model records
-models/records/**
-reports/figures/**
-/dataset
+!models/records
+models/records/*
+!models/records/streamlit
+!models/records/demo’campaign
+!models/records/exemple
 
-#reports/figures/test
-#reports/figures/temp*
+!reports/figures
+reports/figures/*
+!reports/figures/final-test2
+!reports/figures/test-classifpatient
+!reports/figures/test-finetuning2
+
+/dataset
+/data/*
 
 .DS_Store
 **/.DS_Store
