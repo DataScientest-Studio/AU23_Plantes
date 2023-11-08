@@ -16,8 +16,8 @@ def setup_sidebar():
         col1, col2, col3 = st.columns([0.2,0.7,0.2])
         with col2 : 
             st.image(logo)  
-        choose = option_menu("", ["Introduction", "A propos du jeu de données", "DataViz", "Modélisation", "Utilisation du modèle", "Conclusion"],
-                            icons=['arrow-repeat', 'database-fill', 'pie-chart', 'box-fill','cloud-download', 'check-circle-fill'],
+        choose = option_menu("", ["Introduction", "Jeux de données",  "Modélisation", "Interprétabilité et Segmentation","Utilisation du modèle", "Conclusion"],
+                            icons=['arrow-repeat', 'database',  'box', 'eyedropper', 'cloud-download', 'check-circle'],
                             default_index=0,
                             styles={
             "container": {"padding": "5!important", "background-color": "#fafafa"},

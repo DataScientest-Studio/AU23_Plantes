@@ -13,7 +13,7 @@ import os
 import src.features as lf 
 import tensorflow as tf
 import src.models as lm
-
+import streamlit.components.v1 as html
 
 images_especes = "src/streamlit/fichiers/images_especes.png"
 color_palette = px.colors.sequential.speed
@@ -107,3 +107,8 @@ def plot_confusion_matrix(conf_matrix, classes):
     ax.set_ylabel('Vraie classe')
     ax.set_xlabel('Classe prédite')
     return fig
+
+def get_plotly_html(file) :
+    with open(file, "r", encoding='utf-8') as f:
+        html_content = f.read()
+    return html_content
