@@ -53,4 +53,5 @@ if choose == "Utilisation du modèle":
     ls.e_demo.content(trainer_modeles)
 
 if choose == "Conclusion":
+    st.markdown('#### Matrice de confusion sur les prédictions de la démo')
     ls.f_conclusion.content(trainer_modeles)

@@ -15,7 +15,7 @@ Notre objectif final est de fournir les bases d’un outil robuste pour la class
 
 Derrière ce FloraFlow se trouvent 4 personnes en formation chez DataScientest:
 
-- Gilles de Peretti [Linkedin](#) - [GitHub](#)
+- Gilles de Peretti [Linkedin](https://www.linkedin.com/in/gilles-de-peretti-8219425a/) - [GitHub](https://github.com/gillesdeperetti)
 - Hassan ZBIB [Linkedin](#) - [GitHub](#)
 - Dr. Iréné AMIEHE ESSOMBA [Linkedin](#) - [GitHub](#)
 - Olivier MOTELET [Linkedin](#) - [GitHub](#)
@@ -84,6 +84,8 @@ Pour commencer à utiliser FloraFlow, clonez le dépôt et installez les dépend
     cd FloraFlow
     pip install -r requirements.txt
     ```
+
+Ensuite ensuite téléchargez le jeu de données de Kaggle cité plus haut et placez le dans votre dossier local FloraFlow. Il est conseillé de ne pas utiliser le dossier NonSegmented qui peut contenir plusieur plants de différentes espèces au sein d'une même image. 
 
 ## Utilisation
 

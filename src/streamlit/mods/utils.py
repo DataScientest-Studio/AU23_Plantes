@@ -108,8 +108,7 @@ def pred_confusion_matrix(feedback, classes, model_name=None):
 def plot_confusion_matrix(conf_matrix, classes):
     fig, ax = plt.subplots(figsize=(10, 7))
     sns.heatmap(conf_matrix, annot=True, fmt='d',
-                xticklabels=classes, yticklabels=classes, cmap='Blues', ax=ax)
-    ax.set_title("Matrice de confusion prédictions sur les images du web")
+                xticklabels=classes, yticklabels=classes, cmap='Greens', ax=ax)
     ax.set_ylabel('Vraie classe')
     ax.set_xlabel('Classe prédite')
     return fig

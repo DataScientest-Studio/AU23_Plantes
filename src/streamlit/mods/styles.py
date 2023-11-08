@@ -16,7 +16,7 @@ def setup_sidebar():
         col1, col2, col3 = st.columns([0.2,0.7,0.2])
         with col2 : 
             st.image(logo)  
-        choose = option_menu("", ["Introduction", "Jeux de données",  "Modélisation", "Interprétabilité & Segmentation","Utilisation du modèle", "Conclusion"],
+        choose = option_menu("", ["Introduction", "Jeu de données",  "Modélisation", "Interprétabilité & Segmentation","Utilisation du modèle", "Conclusion"],
                             icons=['arrow-repeat', 'database',  'box', 'layers-half', 'cloud-download', 'check-circle'],
                             default_index=0,
                             styles={
@@ -36,7 +36,7 @@ def setup_sidebar():
 
 
         st.sidebar.markdown("""
-        #### Gilles de Peretti <a href="URL_GITHUB_GILLES" target="_blank"><i class='fab fa-github'></i></a> <a href="URL_LINKEDIN_GILLES" target="_blank"><i class='fab fa-linkedin'></i></a>
+        #### Gilles de Peretti <a href="https://github.com/gillesdeperetti" target="_blank"><i class='fab fa-github'></i></a> <a href="https://www.linkedin.com/in/gilles-de-peretti-8219425a/" target="_blank"><i class='fab fa-linkedin'></i></a>
         """, unsafe_allow_html=True)
 
         st.sidebar.markdown("""

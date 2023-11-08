@@ -87,7 +87,6 @@ def content(trainer_modeles) :
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("Correcte"):
-                        # Handle feedback for both URL and non-URL sources
                         image_info = url if st.session_state.get('source_image') == 'url' else selected_image
                         enregistrer_feedback_pandas(image_info, st.session_state['classe_predite'],
                                                     st.session_state['classe_predite'], trainer_modeles[choix_idx])
@@ -101,7 +100,6 @@ def content(trainer_modeles) :
                     bonne_classe = st.multiselect("Précisez la bonne classe :", especes)
                     if st.button('Confirmer la classe'):
                         if bonne_classe:
-                            # Handle feedback for both URL and non-URL sources
                             image_info = url if st.session_state.get('source_image') == 'url' else selected_image
                             enregistrer_feedback_pandas(image_info, st.session_state['classe_predite'], bonne_classe[0],
                                                         trainer_modeles[choix_idx])
