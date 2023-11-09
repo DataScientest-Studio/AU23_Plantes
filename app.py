@@ -40,7 +40,7 @@ if choose == "Jeux de données":
 if choose == "Modélisation":
     ls.c_modelisation.content()
 
-if choose == "Interprétabilité et Segmentation" :
+if choose == "Interprétabilité & Segmentation" :
     ls.d_segmentation.content()
 
 if choose == "Utilisation du modèle":
