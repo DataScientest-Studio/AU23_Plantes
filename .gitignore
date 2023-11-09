@@ -186,3 +186,4 @@ reports/figures/*
 src/streamlit/mods/.DS_Store
 src/streamlit/fichiers/*.h5
 
+especes/

@@ -156,7 +156,7 @@ def compute(
         
         cmap = get_cmap_list()
         fig2, axes= plt.subplots(1,4, figsize=(12, 3))
-        titles = ['Original Image, in RGB space', 'RGB LAB color space', 'Mask', 'Image-Segmentation']
+        titles = ["Image originale, dans l'espace RGB", "Image dans L'espace LAB", 'Masque', 'Image Segmentée']
         for i in range(4):
             axes[i].axis('off')
             axes[i].set_title(titles[i], fontsize='medium')
@@ -166,7 +166,7 @@ def compute(
         axes[2].imshow(mask, interpolation='nearest')
         axes[3].imshow(img_without_bg, interpolation='nearest')
 
-        fig2.suptitle(f"{name} : Background Removal Process", fontsize="large", weight="bold")
+        fig2.suptitle(f"{name} : Processus de suppression d'arrière plan", fontsize="large", weight="bold")
         plt.show()
 
     else:
