@@ -4,7 +4,6 @@ from src.streamlit.mods.utils import *
 from src.streamlit.mods.styles import *
 from src.streamlit.mods.explain import *
 
-data = pd.read_csv('src/streamlit/fichiers/dataset_plantes.csv')
 dis_classe = distribution_des_classes(data)
 poids_median = poids_median_resolution(data)
 ratios = ratios_images(data)
@@ -16,41 +15,18 @@ def content() :
     st.header("Exploration du jeu de données")
     st.markdown("""
     <div class="text-justify">
-        Le jeu de données utilisé est intitulé V2 Plant Seedlings Dataset disponible sur Kaggle est une base de données d'images publiques pour l'étalonnage des algorithmes de classification des semis de plantes.
-        Le dataset V2 Plant Seedlings est composé de 5539 images représentant des plants au stade de la germination. Elles sont regroupées en 12 classes, représentant chacune une variété / espèce de plantes.
+        Le dataset V2 Plant Seedlings est composé de <strong>5539 images</strong> représentant des plants au stade de la germination. Elles sont regroupées en <strong>12 classes, représentant chacune une variété / espèce de plantes.</strong>
     </div>
     """, unsafe_allow_html=True)
-    st.markdown("***Exemple de photos pour chaque espèce***", unsafe_allow_html=True)
-    st.image(images_especes)
-    st.markdown("""
-    <div class="text-justify">
-        L'exploration de ce jeu de données comprendra les étapes suivantes :
+    st.write("""
 
-        - Analyse des caractéristiques du jeu de données.
-        - Exploration du contenu des images.
-    </div>
-    """, unsafe_allow_html=True)
+    """)
+    with st.expander("## Exemple de photos pour chaque espèce"):
+        st.image(images_especes)    
+    st.write("""
 
-    st.header("Analyse des caractéristiques du jeu de données")
-    st.markdown("""
-    <div class="text-justify">
-        Une fois le contenu du dataset chargé sur nos machines, nous avons créé un DataFrame afin de récupérer 
-        les caractéristiques principales du jeu de donnée. Nous avons récupéré les informations essentielles et procédé à des calculs pour recueillir sur chaque image : 
-        <ul>
-            <li>La classe (espèce) à laquelle elle appartient</li>
-            <li>Le nom du fichier correspondant</li>
-            <li>Le chemin pour y accéder</li>
-            <li>Sa hauteur (H) et sa largeur (L)</li>
-            <li>Son ratio, défini par les deux variables précédentes</li>
-            <li>Sa shape (H / L / Nombre de canaux)</li>
-            <li>Résolution (HxL)</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Exploration intéractive du DataFrame
+    """)
     with st.expander("## Exploration du DataFrame"):
-        # Filtrage des espèces
         if 'selection_especes' not in st.session_state:
             st.session_state.selection_especes = []
         col1, col2 = st.columns([0.3, 0.7])
@@ -102,11 +78,6 @@ def content() :
 
 
     """)
-    st.subheader("Visualisation des données ⬇️ ")
-    st.write("""
-
-
-    """)
     col1, col2, col3, col4 = st.columns(4)
 
     btn1 = col1.button('Distribution des classes')
@@ -130,7 +101,7 @@ def content() :
         with onglet2:
             st.plotly_chart(histogramme, use_container_width=True)
 
-    st.write("##### Insight que nous pouvons retirer :")
+    st.write("##### Insight :")
     st.write("""
     - Les dimensions des images sont très variées, allant de 49x49 à 3457x3652 pixels. 
         - Très peu d’images au-delà de 1500x1500 pixels. 
@@ -138,5 +109,8 @@ def content() :
         - La valeur médiane est de 267x267 pixels.
     - Bien que 98,77% des images aient un ratio hauteur-largeur égal à 1 (c'est-à-dire qu'elles sont carrées), certaines présentent un ratio qui s'approche de 1 ou le dépasse sans toutefois y être égal.
     - La grande majorité des images est en format RGB. Seules quelques unes (0,433%) sont en format RGBA. 
+    - Le poids des images et par conséquent leur qualité est très déséquilibré
     - Il y a un déséquilibre des classes qu'il faudra prendre en compte lors de la modélisation
+    - Le fonds des images n'est pas toujours uniforme (gravier / bache noire / objets divers ...)
+    - Trois images ne contiennt pas de plantes 
     """)

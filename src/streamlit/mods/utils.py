@@ -16,30 +16,28 @@ import src.models as lm
 import streamlit.components.v1 as html
 import re
 
-
+data = pd.read_csv("src/streamlit/fichiers/dataset_plantes.csv")
 images_especes = "src/streamlit/fichiers/images_especes.png"
 color_palette = px.colors.sequential.speed
 color_palette_b = ['#E9D98B', '#66940A']
-data = pd.read_csv("src/streamlit/fichiers/dataset_plantes.csv")
 feedbacks = "src/streamlit/fichiers/feedback/feedback.csv"
 especes = list(data['Classe'].unique())
 
-data['Ratio'] = data['Largeur'] / data['Hauteur']
-
+st.cache_data()
 def load_css(file_name):
     with open(file_name, "r") as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-@st.cache_data
+st.cache_data()
 def distribution_des_classes(data):
     return px.histogram(data, x="Classe", title="Distribution des classes", color='Classe', color_discrete_sequence=color_palette)
 
-@st.cache_data
+st.cache_data()
 def poids_median_resolution(data):
     df_median = data.groupby('Classe')['Poids'].median().reset_index()
     return px.bar(df_median, x='Classe', y='Poids', title="Poids médian des images par classe", labels={'Poids': 'Poids Médian'}, color='Classe', color_discrete_sequence=color_palette)
-    
-@st.cache_data
+
+st.cache_data()
 def ratios_images(data):
     data['Ratio'] = data['Largeur'] / data['Hauteur']
     bins = [0, 0.90, 0.95, 0.99, 1.01, 1.05, max(data['Ratio']) + 0.01]
@@ -48,7 +46,7 @@ def ratios_images(data):
     count_data = data.groupby(['Ratio_cat', 'Classe']).size().reset_index(name='Nombre')
     return px.bar(count_data, x='Ratio_cat', y='Nombre', color='Classe', title="Nombre d'images par classe pour chaque catégorie de ratio", barmode='group', color_discrete_sequence=color_palette)
 
-@st.cache_data
+st.cache_data()
 def repartition_rgb_rgba(data):
     data['Canaux'] = data['Forme'].str.extract(r'\((?:\d+, ){2}(\d+)\)')[0].astype(int)
     compte_rgb = (data['Canaux'] == 3).sum()
@@ -57,7 +55,7 @@ def repartition_rgb_rgba(data):
     etiquettes = ["RGB", "RGBA"]
     return px.pie(values=valeurs, names=etiquettes, title="Répartition des images en RGB et RGBA", color_discrete_sequence=color_palette_b)
 
-@st.cache_data
+st.cache_data()
 def repartition_especes_images_rgba(data):
     data['Canaux'] = data['Forme'].str.extract(r'\((?:\d+, ){2}(\d+)\)')[0].astype(int)
     donnees_rgba = data[data["Canaux"] == 4]

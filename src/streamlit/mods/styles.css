@@ -14,3 +14,13 @@
     width: 100%;
     z-index: 1000;
 }
+
+
+.text-justify strong {
+    color: #68AD3A; 
+}
+
+.text-justify a {
+    color: #68AD3A; 
+    font-weight: bold; 
+}

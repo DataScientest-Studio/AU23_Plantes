@@ -23,9 +23,6 @@ lm.models.FIGURE_DIR='reports/figures'
 
 trainer_modeles = load_all_models()
 
-# Graphs 
-
-
 choose = setup_sidebar()
 # PAGES
 
