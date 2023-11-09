@@ -27,7 +27,7 @@ def content():
         </div>
     </div>    
             """, unsafe_allow_html=True)
-        st.text('Spoiler : 0.99% score F1 sur notre meilleur modèle')
+        st.text('Spoiler : 99% score F1 sur notre meilleur modèle')
         st.image("src/streamlit/fichiers/moteur.gif")
 
     with tab2:
@@ -88,11 +88,11 @@ EarlyStopping('val_loss', patience=5), ModelCheckpoint("val_categorical_accuracy
                 <div class="text-justify">
                    Sur la base des étalons nous avons fait une série d’améliorations successives
                    <ol>
-                    <li> <b>Segmentation des images</b> ≃ +0.04% F1 Accuracy (0.89%)</li>
+                    <li> <b>Segmentation des images</b> ≃ +4 pts F1 Accuracy (89%)</li>
                     La technique de computer vision utilisée est détaillée dans la sections suivante.  
                     <br>
                     <br>
-                    <li> <b>Fine-tuning du CNN </b>≃ +0.06% F1 Accuracy (0.95%)</li>
+                    <li> <b>Fine-tuning du CNN </b>≃ +6pts F1 Accuracy (95%)</li>
                     Nous réentrainons les derniers 50% des couches du CNN. 
                     Cet entrainement se fait en une seul étape, en incluant les couches de normalisation et de dropout 
                     et <b>sans passer</b> en mode inférence (<code>training=False</code>)
@@ -101,7 +101,7 @@ EarlyStopping('val_loss', patience=5), ModelCheckpoint("val_categorical_accuracy
                      <a href="https://htmlpreview.github.io/?https://github.com/DataScientest-Studio/AU23_Plantes/blob/main/reports/figures/test-finetuning2/compare_performances_accuracy.html">Illustration</a> et les explications dans le rapport)
                     <br>
                     <br>
-                    <li><b>Couches de classification</b> ≃ +0.02% F1 Accuracy (0.97%)</li>
+                    <li><b>Couches de classification</b> ≃ +2pts F1 Accuracy (97%)</li>
                      Nous ajoutons le regulizer L2(1e-4) sur la couche Dense(12) en augmentant la patience à 5 de LROnPlateau (au lieu de 3 précédement). Là aussi nous avons testé de nombreuses
                       combinaisons de couche Dense (1024, 256, 128) et différent Dropout et c’est cette configuration qui nous a donné
                       les meilleurs résultats. (<a href="https://github.com/DataScientest-Studio/AU23_Plantes/blob/main/src/testClassif2.py">Code</a>,
@@ -132,7 +132,7 @@ EarlyStopping('val_loss', patience=5), ModelCheckpoint("val_categorical_accuracy
         Dans un contexte d’utilisation de notre modèle sur des robots desherbeurs intelligent,
          il est raisonnable de les associer comme une même espèce nuisible. (<a href="https://github.com/DataScientest-Studio/AU23_Plantes/blob/main/notebooks/3-%20Final%20Model%20results.ipynb">Code sur Github</a>)
         <br><br>
-        Notre modèle devient alors très performant :         
+        Notre modèle devient alors très performant : 99% F1 Accuracy         
         """, unsafe_allow_html=True)
         st.image("./src/streamlit/fichiers/final_classification.png")
         st.image("./src/streamlit/fichiers/final_confusion.png")

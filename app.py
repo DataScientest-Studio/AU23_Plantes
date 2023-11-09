@@ -34,7 +34,7 @@ import src.streamlit as ls
 if choose == "Introduction":
     ls.a_intro.content()
 
-if choose == "Jeux de données":
+if choose == "Jeu de données":
     ls.b_dataset.content()
 
 if choose == "Modélisation":
