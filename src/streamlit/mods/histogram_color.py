@@ -85,28 +85,28 @@ def plotly_histogram(
     fig = make_subplots(rows=1, cols=3, 
                         subplot_titles=(
                             'Luminance', 
-                            'Green to Magenta', 
-                            'Blue to Yellow')
+                            'Vert au Magenta', 
+                            'Bleue au Jaune')
                         )
 
     # Ajoutez les histogrammes sur chaque axe
     fig.add_trace(
                 go.Histogram(
-                            x=x1, name='<span style="color:black">channel 0</span>', 
+                            x=x1, name='<span style="color:black">Canal L</span>', 
                             xcalendar='persian', hoverlabel=dict(bgcolor="rgb(0,0,0)"),
                             marker=dict(color=colormap_r), opacity=opacity, autobinx=False,
                             xbins=dict(start=0, end=1, size=size)
                             ), row=1, col=1
                 )
     fig.add_trace(
-                go.Histogram(x=x2, name='<span style="color:darkgreen">channel 1</span>', 
+                go.Histogram(x=x2, name='<span style="color:darkgreen">Canal A</span>', 
                             xcalendar="ethiopian", hoverlabel=dict(bgcolor="rgb(0,255,0)"),
                             marker=dict(color=colormap_g), opacity=opacity, autobinx=False,
                             xbins=dict(start=0, end=1, size=size)
                             ), row=1, col=2
                 )
     fig.add_trace(
-                go.Histogram(x=x3, name='<span style="color:darkblue">channel 2</span>',
+                go.Histogram(x=x3, name='<span style="color:darkblue">Canal B</span>',
                             xcalendar="ethiopian", hoverlabel=dict(bgcolor="rgb(0,0,255)"),
                             marker=dict(color=colormap_b),opacity=opacity, autobinx=False,
                             xbins=dict(start=0, end=1, size=size)
@@ -115,11 +115,11 @@ def plotly_histogram(
 
     # Personnalisez le layout
     fig.update_layout(
-        title_text=f'{name} : 3-channel bar histograms in RGB LAB color space',
-        xaxis=dict(title='Luminosity'),
-        yaxis=dict(title="Intensity (Px)"),
-        xaxis2=dict(title='Luminosity'),
-        xaxis3=dict(title='Luminosity'),
+        title_text=f"{name} : Histogrammes de couleurs à 3 canaux dans l'espace colorimétrique LAB",
+        xaxis=dict(title='Luminosité'),
+        yaxis=dict(title="Intensité (Px)"),
+        xaxis2=dict(title='Luminosité'),
+        xaxis3=dict(title='Luminosité'),
     )
 
 
@@ -170,26 +170,26 @@ def compute(
         plt.show()
 
     else:
-        plant_id = st.select_slider("Plant's ID", options=range(len(PATHS)), value=0)
-        st.write("Palnt's Name : ", PLANT_NAMES[plant_id])
+        plant_id = st.select_slider("ID de la Plante", options=range(len(PATHS)), value=0)
+        st.write("Nom de la plante : ", PLANT_NAMES[plant_id])
 
-        threshold = st.select_slider('Pixels threshold', options=[round(x, 2) for x in np.arange(0, 1.005, 0.01)], value=(0, 0.33))
-        st.write('range', threshold)
+        threshold = st.select_slider('Domaine de pixellisation', options=[round(x, 2) for x in np.arange(0, 1.005, 0.01)], value=(0, 0.33))
+        st.write('Valeurs', threshold)
         threshold = [int(p * 255) for p in threshold]
 
         col2, col3, col4 = st.columns(3)
 
         with col2:
-            color = st.selectbox('Background Color', options=('white', "black"))
+            color = st.selectbox("Couleur de fond", options=('white', "black"))
             st.write('',  color)
 
         with col3:
-            kernel = st.slider("Kernel", min_value=1, value=1, step=1, max_value=5)
-            st.write('range', (kernel, kernel))
+            kernel = st.slider("Kernel", min_value=1, value=1, step=1, max_value=10)
+            st.write('Valeurs', (kernel, kernel))
 
         with col4:
-            show_seg = st.checkbox('Show Images')
-            st.write('state', show_seg)
+            show_seg = st.checkbox('Plus de détails')
+            st.write('état', show_seg)
 
         img = plt.imread(PATHS[plant_id]).astype("float32")
         name = PLANT_NAMES[plant_id]
@@ -211,7 +211,7 @@ def compute(
             if show_seg:
                 cmap = get_cmap_list()
                 fig2, axes= plt.subplots(1,4, figsize=(12, 3))
-                titles = ['Original Image, in RGB space', 'RGB LAB color space', 'Mask', 'Image-Segmentation']
+                titles = ["Image dans l'espace RGB", "Image dans l'espace LAB", 'Masque', 'Image Segmentée']
                 for i in range(4):
                     axes[i].axis('off')
                     axes[i].set_title(titles[i], fontsize='medium')
