@@ -5,7 +5,7 @@ from src.streamlit.mods.styles import *
 from src.streamlit.mods.explain import *
 import src.models as lm
 import src.features as lf
-
+st.write(especes)
 def content( trainer_modeles) :
     nom_des_modeles_csv = {
         'MobileNetv3': '4-dense-Mob',

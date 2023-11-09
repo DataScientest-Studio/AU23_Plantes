@@ -14,6 +14,8 @@ import src.features as lf
 import tensorflow as tf
 import src.models as lm
 import streamlit.components.v1 as html
+import re
+
 
 images_especes = "src/streamlit/fichiers/images_especes.png"
 color_palette = px.colors.sequential.speed
@@ -98,10 +100,18 @@ def reset_state():
 
 def pred_confusion_matrix(feedback, classes, model_name=None):
     df_feedback = pd.read_csv(feedback)
+    
+    pattern = re.compile(r'shepherd[’\']?s?\s*purse', re.I)
+
+    df_feedback['Bonne Classe'] = df_feedback['Bonne Classe'].apply(lambda x: re.sub(pattern, 'Shepherd\'s Purse', x))
+    df_feedback['Classe Predite'] = df_feedback['Classe Predite'].apply(lambda x: re.sub(pattern, 'Shepherd\'s Purse', x))
+    
     if model_name is not None:
         df_feedback = df_feedback[df_feedback['Modèle Utilisé'] == model_name]
-    df_feedback.dropna(subset=['Classe Predite', 'Bonne Classe'], inplace=True)
-    df_feedback.drop_duplicates(subset=['URL', 'Classe Predite', 'Bonne Classe', 'Modèle Utilisé'], inplace=True)
+    
+    if 'Shepherd\'s Purse' not in classes:
+        classes.append('Shepherd\'s Purse')
+
     matrice_conf = confusion_matrix(df_feedback['Bonne Classe'], df_feedback['Classe Predite'], labels=classes)
     return matrice_conf
 
