@@ -19,10 +19,10 @@ def content(trainer_modeles) :
     choix_modele = trainer_modeles[choix_idx]
 
     option = st.selectbox("Comment voulez-vous télécharger une image ?",
-                          ("Choisir une image de la galerie", "Télécharger une image", "Utiliser une URL"))
+                          ("Lot d'images de test", "Depuis mon ordinateur", "A partir d'une URL"))
     image = None
     progress_bar = st.progress(0)
-    if option == 'Télécharger une image':
+    if option == 'Depuis mon ordinateur':
         with st.expander("ℹ️ Informations"):
             show_information_block("basic_info")
         uploaded_file = st.file_uploader("Choisissez une image...", type=["jpg", "png"])
@@ -40,7 +40,7 @@ def content(trainer_modeles) :
             with col2:
                 st.write("##### Aperçu de l'image à prédire")
                 st.image(cropped_img, use_column_width=True)
-    elif option == 'Utiliser une URL':
+    elif option == "A partir d'une URL":
         with st.expander("ℹ️ Informations"):
             show_information_block("image_url")
         url = st.text_input("Entrez l'URL de l'image")
@@ -61,7 +61,7 @@ def content(trainer_modeles) :
                 st.write("##### Aperçu de l'image à prédire")
                 st.image(cropped_img, use_column_width=True)
             image = cropped_img
-    elif option == 'Choisir une image de la galerie':
+    elif option == "Lot d'images de test":
         with st.expander("ℹ️ Informations"):
             show_information_block("gallery_info")
         gallery_list = os.listdir('src/streamlit/fichiers/gallery')
@@ -69,7 +69,14 @@ def content(trainer_modeles) :
         image_path = os.path.join('src/streamlit/fichiers/gallery', selected_image)
         image = Image.open(image_path)
         st.write("##### Aperçu de l'image à prédire")
-        st.image(image, use_column_width=True)
+        tab1, tab2, tab3 = st.columns([0.25,0.5,0.25])
+        with tab1:
+            st.write("")
+        with tab2:
+            st.image(image, width=350)
+        with tab3:
+            st.write("")
+
     feedback_placeholder = st.empty()
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
