@@ -1,9 +1,10 @@
 import streamlit as st
+import pandas as pd 
 from src.streamlit.mods.utils import *
 from src.streamlit.mods.styles import *
 from src.streamlit.mods.explain import *
 
-
+data = pd.read_csv('src/streamlit/fichiers/dataset_plantes.csv')
 dis_classe = distribution_des_classes(data)
 poids_median = poids_median_resolution(data)
 ratios = ratios_images(data)
