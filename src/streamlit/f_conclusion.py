@@ -57,9 +57,31 @@ def content( trainer_modeles) :
             - Le projet consiste à équiper un robot désherbeur d'une technologie capable de détecter les jeunes pousses en condition réelle.
               Cela implique la création préalable d'un dataset détaillé avec des boîtes englobantes pour chaque plante, afin de renforcer la précision et l'efficacité de la détection.
                 
-            - Eventuellement déploiement du modèle sur un cluster central pour un suivi et une maintenance continue.
+
+            </p>""", unsafe_allow_html=True)
+
+
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.image("src/streamlit/fichiers/image_avec_bbox17.jpg")
+    with col2:
+        st.image("src/streamlit/fichiers/image_avec_bbox18.jpg")
+    with col3:
+        st.image("src/streamlit/fichiers/image_avec_bbox.jpg")
+
+    st.markdown(
+        """
+        <div style="display: flex; justify-content: center; align-items: center;">Exemple avec quelques images du dataset.
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("""
+            <p class="text-justify">
                 
-            - Comparer notre modèles à des méthodes plus récentes comme YOLO (You Only Look Once), SSD (Single Shot MultiBox Detector) et Faster R-CNN
+            - Eventuellement un déploiement du modèle sur un cluster central pour un suivi et une maintenance continue.
+                
+            - Comparer notre modèle à des méthodes plus récentes comme YOLO (You Only Look Once), SSD (Single Shot MultiBox Detector) et Faster R-CNN
               pour évaluer leur pertinence face à la problématique soulevé par le projet. 
              
             - L'intégration d'un mécanisme de feedback humain offre le potentiel d'accumuler un jeu de données complémentaire qui, en atteignant
