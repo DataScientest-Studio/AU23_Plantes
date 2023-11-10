@@ -5,6 +5,7 @@ from src.streamlit.mods.utils import *
 from src.streamlit.mods.styles import *
 from src.streamlit.mods.explain import *
 import src.models as lm
+import src.features as lf
 from streamlit_cropper import st_cropper
 
 def content(trainer_modeles) :
@@ -17,7 +18,9 @@ def content(trainer_modeles) :
     choix_nom_modele = st.selectbox("Choisissez un modèle", list(modeles.keys()))
     choix_idx = modeles[choix_nom_modele]
     choix_modele = trainer_modeles[choix_idx]
-
+    especes = list(data['Classe'].unique())
+    if 'show_elements' not in st.session_state:
+        st.session_state['show_elements'] = False  
     option = st.selectbox("Comment voulez-vous télécharger une image ?",
                           ("Lot d'images de test", "Depuis mon ordinateur", "A partir d'une URL"))
     image = None
@@ -103,7 +106,6 @@ def content(trainer_modeles) :
                     if st.button("Incorrecte"):
                         st.session_state['mauvaise_pred'] = True
                 if st.session_state.get('mauvaise_pred'):
-                    especes = list(data['Classe'].unique())
                     bonne_classe = st.multiselect("Précisez la bonne classe :", especes)
                     if st.button('Confirmer la classe'):
                         if bonne_classe:
@@ -115,3 +117,33 @@ def content(trainer_modeles) :
                             reset_state()
                         else:
                             st.error("Veuillez sélectionner une classe avant de confirmer.")
+    col1, col2, col3 = st.columns([1.2,1,1])
+    with col2:
+        if st.button('Matrices de confusion'):
+            st.session_state['show_elements'] = not st.session_state['show_elements']
+    if st.session_state['show_elements']:
+        nom_des_modeles_csv = {
+            'MobileNetv3': '4-dense-Mob',
+            'ResNetv2': '4-dense-Res'
+        }
+
+        nom_des_modeles_affichage = {
+            'MobileNetv3': 'MobileNetv3Large',
+            'ResNetv2': 'ResNetv2'
+        }
+
+        tab_titles = [nom_des_modeles_affichage.get(type(model).__name__, 'Modèle Inconnu') for model in trainer_modeles]
+        tabs = st.tabs(tab_titles)
+
+        for model, tab in zip(trainer_modeles, tabs):
+            with tab:
+                model_class_name = type(model).__name__
+                model_name_csv = nom_des_modeles_csv.get(model_class_name, 'Inconnu')
+
+                if model_name_csv == 'Inconnu':
+                    st.error(f"Le nom CSV du modèle pour la classe {model_class_name} est inconnu.")
+                    continue
+
+                conf_matrix = pred_confusion_matrix(feedbacks, especes, model_name_csv)
+                fig = plot_confusion_matrix(conf_matrix, especes)
+                st.pyplot(fig)
