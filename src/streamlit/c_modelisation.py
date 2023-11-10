@@ -3,7 +3,7 @@ from src.streamlit.mods.utils import get_plotly_html
 import streamlit.components.v1 as html
 
 def content():
-    st.header("Modélisation")
+    st.title("Modélisation")
     tab1, tab2, tab3,tab4,tab5 = st.tabs(["Méthode", "CNN", "Étalons", "Réglages", "Résultats"])
 
     with tab1:
@@ -31,7 +31,7 @@ def content():
         st.image("src/streamlit/fichiers/moteur.gif")
 
     with tab2:
-        st.subheader('Choix du CNN préentrainé')
+        st.header('Choix du CNN préentrainé')
         st.markdown("""
                 <div class="text-justify">
                      Nous avons essayé et comparé différents modèles CNN : quelques CNN maison et plusieurs  modèles pré-entraînés en partant des poids d’entrainement <code>imagenet</code>
@@ -55,7 +55,7 @@ def content():
 
 
     with tab3:
-        st.subheader('Choix des paramètres étalons')
+        st.header('Choix des paramètres étalons')
         st.markdown("""
                 <div class="text-justify">
                     Nous avons défini 2 test étalons sur la base desquels la suite des expérimentations ont été réalisées  <a href="https://github.com/DataScientest-Studio/AU23_Plantes/blob/main/src/models/final_test/stage1.py">(code sur GitHub)</a>.
@@ -83,7 +83,7 @@ EarlyStopping('val_loss', patience=5), ModelCheckpoint("val_categorical_accuracy
             """, unsafe_allow_html=True)
 
     with tab4:
-        st.subheader('Réglages')
+        st.header('Réglages')
         st.markdown("""
                 <div class="text-justify">
                    Sur la base des étalons nous avons fait une série d’améliorations successives
@@ -122,7 +122,7 @@ EarlyStopping('val_loss', patience=5), ModelCheckpoint("val_categorical_accuracy
                               height=600)
 
     with tab5:
-        st.subheader('Résultats')
+        st.header('Résultats')
         st.markdown("""
         Notre meilleur modèle est obtenu avec un CNN MobilNetV3Large, de la segmentation sémantique, du fine-tuning et de la régularisation L2 sur la couche de normalisation.
         <br>

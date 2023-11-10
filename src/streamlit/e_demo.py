@@ -117,7 +117,7 @@ def content(trainer_modeles) :
                             reset_state()
                         else:
                             st.error("Veuillez sélectionner une classe avant de confirmer.")
-    col1, col2, col3 = st.columns([1.2,1,1])
+    col1, col2, col3 = st.columns([1.155,1,1])
     with col2:
         if st.button('Matrices de confusion'):
             st.session_state['show_elements'] = not st.session_state['show_elements']

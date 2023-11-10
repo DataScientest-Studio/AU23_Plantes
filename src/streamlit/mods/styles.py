@@ -21,9 +21,9 @@ def setup_sidebar():
                             default_index=0,
                             styles={
             "container": {"padding": "1!important", "background-color": "#fafafa"},
-            "icon": {"color": "orange", "font-size": "24px"}, 
+            "icon": {"color": "#FCA500", "font-size": "24px"}, 
             "nav-link": {"font-size": "16px", "text-align": "left", "margin":"0px", "--hover-color": "#eee"},
-            "nav-link-selected": {"background-color": "#02ab21"},
+            "nav-link-selected": {"background-color": "#68AD3A"},
         }
         )
         footer = '''

@@ -4,11 +4,10 @@ def content() :
    import streamlit as st
    import matplotlib.pyplot as plt 
 
-   st.header("Segmentation et Interprétabilité")
-   # st.markdown("")
-   st.subheader('Segmentation sémantique des images')
+   st.title("Segmentation & Interprétabilité")
+   st.header('Segmentation sémantique des images')
    compute(st=st)
-   st.subheader('Interprétabilité')
+   st.header('Interprétabilité')
 
    path1 = "./reports/figures/test-classifpatient/classif-256-0.4_sample_graphs_segmented_gradcam_guidedGradcam.png"
    path2 = "./reports/figures/test-classifpatient/classif-256-0.4_sample_graphs_gradcam_guidedGradcam.png"

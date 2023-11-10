@@ -1,6 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap');
+
+body {
+    font-family: 'Lato', sans-serif;
+    color: #333;
+    background-color: #fff;
+}
+
+h1 {
+    font-size: 2.618em;
+    color: #68AD3A;
+    font-weight: 900;
+}
+
+h2 {
+    font-size: 1.618em;
+    color: #FCA500;
+    font-weight: 700;
+}
+
+p {
+    font-size: 1em;
+    line-height: 1.6;
+    margin-bottom: 1em;
+}
+
+a {
+    color: #2DCDDA;
+    font-weight: 400;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+ul, ol {
+    padding-left: 20px;
+    font-size: 1em;
+}
+
+li {
+    margin-bottom: 0.618em;
+}
+
+button, .stButton > button {
+    background-color: #68AD3A; 
+    color: white; 
+    border: none; 
+    padding: 10px 20px; 
+    border-radius: 5px; 
+    font-family: 'Lato', sans-serif; 
+    transition: background-color 0.3s, transform 0.3s; 
+}
+
+button:hover, .stButton > button:hover {
+    background-color: #FCA500; 
+    color: white; 
+    transform: scale(1.05); 
+}
+
+button:active, .stButton > button:active, .stButton > button:focus {
+    background-color: #4e7c29 !important; 
+    color: white !important;
+    transform: scale(0.98); 
+}
+
 .text-justify {
     text-align: justify;
     text-justify: inter-word;
+}
+
+.text-justify strong {
+    color: #68AD3A;
+}
+
+.text-justify a {
+    color: #7bcdc8;
+    font-weight: bold;
 }
 
 .reportview-container .main .block-container {
@@ -13,14 +88,4 @@
     left: 0;
     width: 100%;
     z-index: 1000;
-}
-
-
-.text-justify strong {
-    color: #68AD3A; 
-}
-
-.text-justify a {
-    color: #68AD3A; 
-    font-weight: bold; 
 }

@@ -12,7 +12,7 @@ histogramme = repartition_especes_images_rgba(data)
 
 
 def content() :
-    st.header("Exploration du jeu de données")
+    st.title("Exploration du jeu de données")
     st.markdown("""
     <div class="text-justify">
         Le dataset V2 Plant Seedlings est composé de <strong>5539 images</strong> représentant des plants au stade de la germination. Elles sont regroupées en <strong>12 classes, représentant chacune une variété / espèce de plantes.</strong>
@@ -36,27 +36,27 @@ def content() :
             if st.button("Effacer la sélection"):
                 st.session_state.selection_especes = []
         with col2:
-            selection_especes = st.multiselect("**Filtrez par espèces:**", especes,
+            selection_especes = st.multiselect("**Filtrer par espèces:**", especes,
                                                default=st.session_state.selection_especes)
 
         col1, col2 = st.columns(2)
         with col1:
             # Filtre sur Hauteur
-            min_height, max_height = st.slider("**Filtrez par hauteur:**", min_value=int(data['Hauteur'].min()),
+            min_height, max_height = st.slider("**Filtrer par hauteur:**", min_value=int(data['Hauteur'].min()),
                                                max_value=int(data['Hauteur'].max()), value=(100, 500))
         with col2:
             # Filtre sur Largeur
-            min_width, max_width = st.slider("**Filtrez par largeur:**", min_value=int(data['Largeur'].min()),
+            min_width, max_width = st.slider("**Filtrer par largeur:**", min_value=int(data['Largeur'].min()),
                                              max_value=int(data['Largeur'].max()), value=(100, 500))
 
         col1, col2 = st.columns(2)
         with col1:
             # Filtre sur Ratio
-            min_ratio, max_ratio = st.slider("**Filtrez par ratio:**", min_value=float(data['Ratio'].min()),
+            min_ratio, max_ratio = st.slider("**Filtrer par ratio:**", min_value=float(data['Ratio'].min()),
                                              max_value=float(data['Ratio'].max()), value=(0.9, 1.15), step=0.01)
         with col2:
             # Filtre sur le nombre de canaux
-            choix_canal = st.radio("**Filtrez par nombre de canaux:**", options=['3', '4', '3 et 4'], horizontal=True)
+            choix_canal = st.radio("**Filtrer par nombre de canaux:**", options=['3', '4', '3 et 4'], horizontal=True)
 
         # Filtrer et afficher le dataframe
         data_filtre = data[
@@ -82,7 +82,7 @@ def content() :
 
     btn1 = col1.button('Distribution des classes')
     btn2 = col2.button('Poids médian selon l\'espèce')
-    btn3 = col3.button('Rapport Hauteur/Largeur par espèce')
+    btn3 = col3.button('Ratio H/L par espèce')
     btn4 = col4.button('Répartion des images en RGBA')
 
     # Barre bouton pour DataViz
@@ -101,7 +101,7 @@ def content() :
         with onglet2:
             st.plotly_chart(histogramme, use_container_width=True)
 
-    st.write("##### Insight :")
+    st.header("Insight :")
     st.write("""
     - Les dimensions des images sont très variées, allant de 49x49 à 3457x3652 pixels. 
         - Très peu d’images au-delà de 1500x1500 pixels. 
@@ -112,5 +112,5 @@ def content() :
     - Le poids des images et par conséquent leur qualité est très déséquilibré
     - Il y a un déséquilibre des classes qu'il faudra prendre en compte lors de la modélisation
     - Le fonds des images n'est pas toujours uniforme (gravier / bache noire / objets divers ...)
-    - Trois images ne contiennt pas de plantes 
+    - Trois images ne contiennent pas de plantes 
     """)

@@ -1,12 +1,12 @@
 import streamlit as st
 
 def content() :
-    st.title("FloraFlow : cultivez mieux avec l'IA")
+    st.title("Cultivez mieux avec l'IA")
     st.image("src/streamlit/fichiers/robot.gif")
-    st.subheader("Objectif du projet :")
+    st.header("Objectif du projet :")
     st.markdown("""
             <p class="text-justify">
-            Au cours de ce projet, nous avons tenté de développer un modèle de deep learning capable de classer avec précision différentes espèces de plantes, en vue d'améliorer la gestion des cultures. Nous avons utilisé le <a href="https://www.kaggle.com/datasets/vbookshelf/v2-plant-seedlings-dataset">V2 Plant Seedlings Dataset disponible sur Kaggle</a>. C'est une base de données d'images publiques pour l'étalonnage des algorithmes de classification des semis de plantes.
+            Au cours de ce projet, nous avons tenté de développer un modèle de deep learning capable de classer avec précision différentes espèces de plantes, en vue d'améliorer la gestion des cultures. Nous avons utilisé le <strong>jeu de données V2 Plant Seedlings</strong> disponible sur <a href="https://www.kaggle.com/datasets/vbookshelf/v2-plant-seedlings-dataset">Kaggle</a>. C'est une base de données d'images publiques pour l'étalonnage des algorithmes de classification des semis de plantes.
             </p>
             <p class="text-justify">Les principales étapes de notre projet ont été :</p>
             <ul class="text-justify">
