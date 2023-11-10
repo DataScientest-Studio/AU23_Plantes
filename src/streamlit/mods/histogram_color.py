@@ -174,22 +174,22 @@ def compute(
         st.write("Nom de la plante : ", PLANT_NAMES[plant_id])
 
         threshold = st.select_slider('Domaine de pixellisation', options=[round(x, 2) for x in np.arange(0, 1.005, 0.01)], value=(0, 0.33))
-        st.write('Valeurs', threshold)
+        st.write('Valeurs:', threshold)
         threshold = [int(p * 255) for p in threshold]
 
         col2, col3, col4 = st.columns(3)
 
         with col2:
             color = st.selectbox("Couleur de fond", options=('white', "black"))
-            st.write('',  color)
+            st.write('Valeur:',  color)
 
         with col3:
             kernel = st.slider("Kernel", min_value=1, value=1, step=1, max_value=10)
-            st.write('Valeurs', (kernel, kernel))
+            st.write('Valeurs:', (kernel, kernel))
 
         with col4:
             show_seg = st.checkbox('Plus de détails')
-            st.write('état', show_seg)
+            st.write('état:', show_seg)
 
         img = plt.imread(PATHS[plant_id]).astype("float32")
         name = PLANT_NAMES[plant_id]
