@@ -67,8 +67,11 @@ def content(trainer_modeles) :
     elif option == "Lot d'images de test":
         with st.expander("ℹ️ Informations"):
             show_information_block("gallery_info")
-        gallery_list = os.listdir('src/streamlit/fichiers/gallery')
-        selected_image = st.selectbox("Sélectionnez une image", gallery_list)
+        gallery_path = 'src/streamlit/fichiers/gallery'
+        gallery_list = os.listdir(gallery_path)
+        image_extensions = ['.jpeg', '.jpg', '.png']
+        image_list = [file for file in gallery_list if os.path.splitext(file)[1].lower() in image_extensions]
+        selected_image = st.selectbox("Sélectionnez une image", image_list)
         image_path = os.path.join('src/streamlit/fichiers/gallery', selected_image)
         image = Image.open(image_path)
         st.write("##### Aperçu de l'image à prédire")
