@@ -26,7 +26,7 @@ def content(trainer_modeles) :
     image = None
     progress_bar = st.progress(0)
     if option == 'Depuis mon ordinateur':
-        with st.expander("ℹ️ Informations"):
+        with st.expander("🎨 Guide visuel pour le choix d'images parfaites"):
             show_information_block("basic_info")
         uploaded_file = st.file_uploader("Choisissez une image...", type=["jpg", "png"])
         if uploaded_file is not None:
@@ -44,7 +44,7 @@ def content(trainer_modeles) :
                 st.write("##### Aperçu de l'image à prédire")
                 st.image(cropped_img, use_column_width=True)
     elif option == "A partir d'une URL":
-        with st.expander("ℹ️ Informations"):
+        with st.expander("🎨 Guide visuel pour le choix d'images parfaites"):
             show_information_block("image_url")
         url = st.text_input("Entrez l'URL de l'image")
         if url:

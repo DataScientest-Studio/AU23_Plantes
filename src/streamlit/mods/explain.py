@@ -74,29 +74,54 @@ def show_information_block(info_type):
         st.error("Type d'information non reconnu.")
 
 
-code_CNN = """
-Conv2D(32, (6, 6), activation='relu', padding='same', kernel_regularizer=l2(0.001), input_shape=(150, 150, 3)),
-BatchNormalization(),
-MaxPooling2D(2, 2),
+def show_information_block(info_type):
+    if info_type == "basic_info":
+        st.markdown("""
+        🌟 **L'ABC des formats acceptés :** JPG, PNG, JPEG. Gardez-les en tête !
 
-Conv2D(64, (5, 5), activation='relu', padding='same', kernel_regularizer=l2(0.001)),
-BatchNormalization(),
-MaxPooling2D(2, 2),
+        🔍 **Choisir avec soin :** Votre image doit être proche de celles que notre modèle connaît. Si votre plante a plus vécu que nos jeunes pousses entraînées, elle pourrait bien le dérouter !
 
-Conv2D(128, (4, 4), activation='relu', padding='same', kernel_regularizer=l2(0.001)),
-BatchNormalization(),
-MaxPooling2D(2, 2),
+        🖼️ **L'art du placement :** Vue du dessus = 🎯. Vue de côté = 🚫. Nos modèles sont de véritables artistes de la vue aérienne !
+        """)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            st.image('src/streamlit/fichiers/mauvaise_blackgrass.png', caption="🛑 Pas comme ça")
+        with col2:
+            st.image('src/streamlit/fichiers/bonne_blackgrass.png', caption="✅ C'est ça !")
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            st.image('src/streamlit/fichiers/mais_2.png', caption="✅ C'est ça !")
+        with col2:
+            st.image('src/streamlit/fichiers/mais_1.png', caption="🛑 Pas comme ça")
+        
+    elif info_type == "image_url":
+        st.markdown("""
+        🔗 **L'Adresse de la réussite :** L'url de votre image devrait ressembler à [https://siteweb.com/mon-image.jpg](#). Assurez-vous qu'elle ressemble aux images d'entraînement pour une prédiction en or !
 
-Conv2D(256, (3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.001)),
-BatchNormalization(),
-MaxPooling2D(2, 2),
+        🌟 **L'ABC des formats acceptés :** JPG, PNG, JPEG. Gardez-les en tête !
 
-Flatten(),
+        🔍 **Choisir avec soin :** Votre image doit être proche de celles que notre modèle connaît. Si votre plante a plus vécu que nos jeunes pousses entraînées, elle pourrait bien le dérouter !
 
-Dense(512, activation='relu', kernel_regularizer=l2(0.001)),
-Dropout(0.5),
+        🖼️ **L'art du placement :** Vue du dessus = 🎯. Vue de côté = 🚫. Nos modèles sont de véritables artistes de la vue aérienne !
+        """)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            st.image('src/streamlit/fichiers/mauvaise_blackgrass.png', caption="🛑 Pas comme ça")
+        with col2:
+            st.image('src/streamlit/fichiers/bonne_blackgrass.png', caption="✅ C'est ça !")
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            st.image('src/streamlit/fichiers/mais_2.png', caption="✅ C'est ça !")
+        with col2:
+            st.image('src/streamlit/fichiers/mais_1.png', caption="🛑 Pas comme ça")
+        
+    elif info_type == "gallery_info":
+        st.markdown(""" 
+        🏞️ **Galerie de l'excellence :**
+        - 📸 **Origine des oeuvres :** Ces images n'ont pas posé pour notre modèle. Elles sont vierges de tout entraînement, choisies par un Random State artistique.
+        - 🌟 **Raison d'être :** Elles démontrent que notre modèle est un virtuose lorsqu'il s'agit d'images familières.
+        - 🔍 **Nom de fichier = Clé de voûte :** Pour comparer classe et prédiction, le nom du fichier est votre guide sans influencer notre modèle.
+        """)
 
-Dense(12, activation='softmax')
-"""
-
-
+    else:
+        st.error("Erreur dans le choix de l'info type")
