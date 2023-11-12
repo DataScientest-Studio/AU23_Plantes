@@ -96,7 +96,7 @@ To get the Streamlit app going and interact with the user interface:
 streamlit run streamlit/app.py 
 ```
 
-or consult [la version en ligne ici](#)
+or consult [the online version](#)
 
 To run the demo notebooks, just open Jupyter Notebook and navigate through the notebooks/ directory.
 
