@@ -1,31 +1,30 @@
-# FloraFlow - Grow better with AI.
+# FloraFlow - Cultivez mieux avec l'IA
 
-This GitHub repository contains all the code necessary for the proper functioning of the project we named FloraFlow. This cornerstone project was carried out during our Data Scientist training at Data Scientest.
+Ce dépôt GitHub contient tout le code nécessaire au bon fonctionnement du projet que l'on a nommé FloraFlow. Ce projet fil-rouge a été mené lors de notre formation Data Scientist chez Data Scientest. 
 
-## Project overview :
-This project aims to develop a deep learning model capable of accurately classifying different plant species, with the goal of improving crop management.
+## Vue d'ensemble du projet :
+Ce projet a pour objectif de développer un modèle de deep learning capable de classer avec précision différentes espèces de plantes, en vue d'améliorer la gestion des cultures. 
 
-The main steps of our project include:
+Les principales étapes de notre projet comprennent :  
+- l'exploration approfondie du jeu de données, 
+- la préparation des données, 
+- la conception et la mise en œuvre d'un modèle d'apprentissage, 
+- ainsi que l'analyse de ses performances.
 
-- In-depth exploration of the dataset,
-- Data preparation,
-- The design and implementation of a learning model,
-- And the analysis of its performance.
+Notre objectif final est de fournir les bases d’un outil robuste pour la classification des plantes, offrant ainsi aux agriculteurs des moyens plus efficaces de gérer leurs cultures.
 
-Our ultimate goal is to provide the foundations of a robust tool for plant classification, thereby offering farmers more efficient means to manage their crops.
-
-Behind FloraFlow are four individuals in training at DataScientest:
+Derrière ce FloraFlow se trouvent 4 personnes en formation chez DataScientest:
 
 - Gilles de Peretti [Linkedin](https://www.linkedin.com/in/gilles-de-peretti-8219425a/) - [GitHub](https://github.com/gillesdeperetti)
-- Hassan ZBIB [Linkedin](https://www.linkedin.com/in/zbib-hassan-a34573272/) - [GitHub](https://github.com/Haszb)
+- Hassan ZBIB [Linkedin](#) - [GitHub](#)
 - Dr. Iréné AMIEHE ESSOMBA [Linkedin](https://www.linkedin.com/in/amiehe-essomba "Amiehe Essomba") - [GitHub](https://github.com/amiehe-essomba "Amiehe Essomba")
 - Olivier MOTELET [Linkedin](#) - [GitHub](#)
 
-## About the dataset: 
+## A propos du dataset 
 
-We used the Kaggle's dataset [V2 Plant Seedlings Dataset](https://www.kaggle.com/datasets/vbookshelf/v2-plant-seedlings-dataset), which includes a collection of plant images belonging to various species.
+Nous avons utilisé le jeu de données Kaggle [V2 Plant Seedlings Dataset](https://www.kaggle.com/datasets/vbookshelf/v2-plant-seedlings-dataset), qui comprend une collection d'images de plantes appartenant à diverses espèces. 
 
-The V2 Plant Seedlings dataset consists of 5539 images representing seedlings at the germination stage. They are grouped into 12 classes, each representing a variety/species of plants.
+Le dataset V2 Plant Seedlings est composé de 5539 images représentant des plants au stade de la germination. Elles sont regroupées en 12 classes, représentant chacune une variété / espèce  de plantes.
 
 ## Structure du projet
 ------------
@@ -78,7 +77,7 @@ The V2 Plant Seedlings dataset consists of 5539 images representing seedlings at
 
 ## Installation
 
-To start using FloraFlow, clone the repository and install the necessary dependencies:
+Pour commencer à utiliser FloraFlow, clonez le dépôt et installez les dépendances nécessaires :
 
     ```bash
     git clone https://github.com/DataScientest-Studio/AU23_Plantes.git FloraFlow
@@ -86,19 +85,19 @@ To start using FloraFlow, clone the repository and install the necessary depende
     pip install -r requirements.txt
     ```
 
-Then, download the Kaggle dataset mentioned earlier and drop it into your FloraFlow folder. It's best to avoid using the NonSegmented folder, as it might have pics of several plant species all mixed in one folder.
+Ensuite téléchargez le jeu de données de Kaggle cité plus haut et placez le dans votre dossier local FloraFlow. Il est conseillé de ne pas utiliser le dossier NonSegmented qui peut contenir plusieur plants de différentes espèces au sein d'une même image. 
 
 ## Utilisation
 
-To get the Streamlit app going and interact with the user interface:
+Pour lancer l'application Streamlit et interagir avec l'interface utilisateur :
 
 ```bash
 streamlit run streamlit/app.py 
 ```
 
-or consult [la version en ligne ici](#)
+ou consulter [la version en ligne ici](#)
 
-To run the demo notebooks, just open Jupyter Notebook and navigate through the notebooks/ directory.
+Pour exécuter les notebooks de démonstration, ouvrez Jupyter Notebook et parcourez le répertoire notebooks/.
 
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
