@@ -118,7 +118,7 @@ def show_information_block(info_type):
     elif info_type == "gallery_info":
         st.markdown(""" 
         🏞️ **Galerie de l'excellence :**
-        - 📸 **Origine des oeuvres :** Ces images n'ont pas posé pour notre modèle. Elles sont vierges de tout entraînement, choisies par un Random State artistique.
+        - 📸 **Origine des oeuvres :** Ces images n'ont pas posé pour notre modèle. Elles sont vierges de tout entraînement, choisies par un Random State artistique, pour autant elles ont des caractéristiques similaires à celles du jeu d'entraînement.
         - 🌟 **Raison d'être :** Elles démontrent que notre modèle est un virtuose lorsqu'il s'agit d'images familières.
         - 🔍 **Nom de fichier = Clé de voûte :** Pour comparer classe et prédiction, le nom du fichier est votre guide sans influencer notre modèle.
         """)
