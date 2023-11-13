@@ -41,6 +41,8 @@ if choose == "Interprétabilité & Segmentation" :
     ls.d_segmentation.content()
 
 if choose == "Utilisation du modèle":
+    if 'loaded' not in st.session_state:
+        st.session_state['loaded'] = None
     if 'classe_predite' not in st.session_state:
         st.session_state['classe_predite'] = None
     if "mauvaise_pred" not in st.session_state:
@@ -51,3 +53,4 @@ if choose == "Utilisation du modèle":
 
 if choose == "Conclusion":
     ls.f_conclusion.content()
+

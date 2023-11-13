@@ -26,6 +26,7 @@ def content() :
     st.markdown("""
             <p class="text-justify">
             Nous avons plusieurs pistes d’amélioration pour continuer cette étude :
+
             - Le projet consiste à équiper un robot désherbeur d'une technologie capable de détecter les jeunes pousses en condition réelle.
               Cela implique la création préalable d'un dataset détaillé avec des boîtes englobantes pour chaque plante, afin de renforcer la précision et l'efficacité de la détection.
                 
@@ -47,8 +48,7 @@ def content() :
                 
             - Eventuellement un déploiement du modèle sur un cluster central pour un suivi et une maintenance continue.
                 
-            - Comparer notre modèle à des méthodes plus récentes comme YOLO (You Only Look Once), SSD (Single Shot MultiBox Detector) et Faster R-CNN
-              pour évaluer leur pertinence face à la problématique soulevé par le projet. 
+            - Explorer les méthode notre modèle à d’autres méthodes plus récentes ou complémentaire comme YOLO (You Only Look Once), SSD (Single Shot MultiBox Detector), Faster R-CNN ou les Vision Transformers (ViT)  pour évaluer leur pertinence face à la problématique soulevé par le projet. 
              
             - L'intégration d'un mécanisme de feedback humain offre le potentiel d'accumuler un jeu de données complémentaire qui, en atteignant
             un volume conséquent, pourrait servir de base pour un apprentissage par renforcement. Ce processus permettrait d'affiner les performances du modèle

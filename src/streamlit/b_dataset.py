@@ -4,11 +4,15 @@ from src.streamlit.mods.utils import *
 from src.streamlit.mods.styles import *
 from src.streamlit.mods.explain import *
 
+
+
+data = pd.read_csv("src/streamlit/fichiers/dataset_plantes.csv")
+especes = list(data['Classe'].unique())
 dis_classe = distribution_des_classes(data)
 poids_median = poids_median_resolution(data)
-ratios = ratios_images(data)
-diagramme_rgba = repartition_rgb_rgba(data)
-histogramme = repartition_especes_images_rgba(data)
+data, ratios = ratios_images(data)
+data, diagramme_rgba = repartition_rgb_rgba(data)
+data, histogramme = repartition_especes_images_rgba(data)
 
 
 def content() :

@@ -8,7 +8,13 @@ import src.models as lm
 import src.features as lf
 from streamlit_cropper import st_cropper
 
+
+data = pd.read_csv("src/streamlit/fichiers/dataset_plantes.csv")
+especes = list(data['Classe'].unique())
+
+
 def content(trainer_modeles) :
+    st.header('Utilisation du modèle')
     url = None
     selected_image = None
     trainer_modeles = load_all_models()
@@ -74,6 +80,7 @@ def content(trainer_modeles) :
         selected_image = st.selectbox("Sélectionnez une image", image_list)
         image_path = os.path.join('src/streamlit/fichiers/gallery', selected_image)
         image = Image.open(image_path)
+        st.session_state['loaded'] = True
         st.write("##### Aperçu de l'image à prédire")
         tab1, tab2, tab3 = st.columns([0.25,0.5,0.25])
         with tab1:
@@ -85,8 +92,9 @@ def content(trainer_modeles) :
 
     feedback_placeholder = st.empty()
     col1, col2, col3 = st.columns([1, 1, 1])
+
     with col2:
-        if st.button("Prédiction", use_container_width=True) and image is not None:
+        if st.button("🚥 Prédire l’espèce 🚥", use_container_width=True) and image is not None and st.session_state['loaded']:
             progress_bar = st.progress(0)
             progress_bar.progress(0.3)
             image = image.resize((224, 224))
@@ -97,16 +105,17 @@ def content(trainer_modeles) :
     with feedback_placeholder.container():
             if st.session_state['classe_predite'] is not None:
                 st.markdown(f"Selon le modèle, il s'agit de l'espèce **{st.session_state['classe_predite']}**")
+                st.markdown(f"Ce résultat est-il correct ?")
                 col1, col2 = st.columns(2)
                 with col1:
-                    if st.button("Correcte"):
+                    if st.button("👍 Oui, c’est la bonne espèce"):
                         image_info = url if st.session_state.get('source_image') == 'url' else selected_image
                         enregistrer_feedback_pandas(image_info, st.session_state['classe_predite'],
                                                     st.session_state['classe_predite'], trainer_modeles[choix_idx])
                         st.session_state['feedback_soumis'] = True
                         st.session_state['classe_predite'] = None
                 with col2:
-                    if st.button("Incorrecte"):
+                    if st.button("👎 Non…"):
                         st.session_state['mauvaise_pred'] = True
                 if st.session_state.get('mauvaise_pred'):
                     bonne_classe = st.multiselect("Précisez la bonne classe :", especes)
@@ -120,10 +129,10 @@ def content(trainer_modeles) :
                             reset_state()
                         else:
                             st.error("Veuillez sélectionner une classe avant de confirmer.")
-    col1, col2, col3 = st.columns([1.155,1,1])
-    with col2:
-        if st.button('Matrices de confusion'):
-            st.session_state['show_elements'] = not st.session_state['show_elements']
+    st.divider()
+    st.header('Performance du modèle en contexte d’utilisation')
+    if st.button('Afficher les matrices de confusion'):
+        st.session_state['show_elements'] = not st.session_state['show_elements']
     if st.session_state['show_elements']:
         nom_des_modeles_csv = {
             'MobileNetv3': '4-dense-Mob',

@@ -16,12 +16,11 @@ import src.models as lm
 import streamlit.components.v1 as html
 import re
 
-data = pd.read_csv("src/streamlit/fichiers/dataset_plantes.csv")
+
 images_especes = "src/streamlit/fichiers/images_especes.png"
 color_palette = px.colors.sequential.speed
 color_palette_b = ['#E9D98B', '#66940A']
 feedbacks = "src/streamlit/fichiers/feedback/feedback.csv"
-especes = list(data['Classe'].unique())
 
 @st.cache_data()
 def load_css(file_name):
@@ -44,7 +43,7 @@ def ratios_images(data):
     bin_labels = ['<0.90', '0.90-0.94', '0.95-0.99', '1', '1.01-1.04', '>1.05']
     data['Ratio_cat'] = pd.cut(data['Ratio'], bins=bins, labels=bin_labels, right=False)
     count_data = data.groupby(['Ratio_cat', 'Classe']).size().reset_index(name='Nombre')
-    return px.bar(count_data, x='Ratio_cat', y='Nombre', color='Classe', title="Nombre d'images par classe pour chaque catégorie de ratio", barmode='group', color_discrete_sequence=color_palette)
+    return data, px.bar(count_data, x='Ratio_cat', y='Nombre', color='Classe', title="Nombre d'images par classe pour chaque catégorie de ratio", barmode='group', color_discrete_sequence=color_palette)
 
 @st.cache_data()
 def repartition_rgb_rgba(data):
@@ -53,7 +52,7 @@ def repartition_rgb_rgba(data):
     compte_rgba = (data['Canaux'] == 4).sum()
     valeurs = [compte_rgb, compte_rgba]
     etiquettes = ["RGB", "RGBA"]
-    return px.pie(values=valeurs, names=etiquettes, title="Répartition des images en RGB et RGBA", color_discrete_sequence=color_palette_b)
+    return data, px.pie(values=valeurs, names=etiquettes, title="Répartition des images en RGB et RGBA", color_discrete_sequence=color_palette_b)
 
 @st.cache_data()
 def repartition_especes_images_rgba(data):
@@ -61,7 +60,7 @@ def repartition_especes_images_rgba(data):
     donnees_rgba = data[data["Canaux"] == 4]
     repartition_especes_rgba = donnees_rgba['Classe'].value_counts().reset_index()
     repartition_especes_rgba.columns = ['Classe', 'Nombre']
-    return px.bar(repartition_especes_rgba, x='Classe', y='Nombre', title='Répartition des espèces au sein des images RGBA', color='Classe', color_discrete_sequence=color_palette_b)
+    return data, px.bar(repartition_especes_rgba, x='Classe', y='Nombre', title='Répartition des espèces au sein des images RGBA', color='Classe', color_discrete_sequence=color_palette_b)
 
 @st.cache_resource()
 def load_all_models():
