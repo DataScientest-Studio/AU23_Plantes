@@ -11,7 +11,7 @@ from streamlit_cropper import st_cropper
 
 data = pd.read_csv("src/streamlit/fichiers/dataset_plantes.csv")
 especes = list(data['Classe'].unique())
-
+feedbacks = "src/streamlit/fichiers/feedback/feedback.csv"
 
 def content(trainer_modeles) :
     st.header('Utilisation du modèle')
@@ -24,7 +24,7 @@ def content(trainer_modeles) :
     choix_nom_modele = st.selectbox("Choisissez un modèle", list(modeles.keys()))
     choix_idx = modeles[choix_nom_modele]
     choix_modele = trainer_modeles[choix_idx]
-    especes = list(data['Classe'].unique())
+    #especes = list(data['Classe'].unique())
     if 'show_elements' not in st.session_state:
         st.session_state['show_elements'] = False  
     option = st.selectbox("Comment voulez-vous télécharger une image ?",

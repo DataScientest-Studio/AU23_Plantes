@@ -112,7 +112,7 @@ EarlyStopping('val_loss', patience=5), ModelCheckpoint("val_categorical_accuracy
              illustrent les performances de ces 3 tests par rapport aux étalons. 
             Le second montre en particulier que les confusions des différents modèles évoluent et se concentre particulièrement sur 2 types.
              (versions html : 
-             <a href="https://htmlpreview.github.io/?https://github.com/DataScientest-Studio/AU23_Plantes/blob/main/reports/figures/final-test2/compare_confusions.html">accuracy</a>,
+             <a href="https://htmlpreview.github.io/?https://github.com/DataScientest-Studio/AU23_Plantes/blob/main/reports/figures/final-test2/compare_performances_accuracy.html">accuracy</a>,
          <a href="https://htmlpreview.github.io/?https://github.com/DataScientest-Studio/AU23_Plantes/blob/main/reports/figures/final-test2/compare_confusions.html">confusion</a>)
             </div>
             """, unsafe_allow_html=True)

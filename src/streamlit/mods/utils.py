@@ -20,7 +20,7 @@ import re
 images_especes = "src/streamlit/fichiers/images_especes.png"
 color_palette = px.colors.sequential.speed
 color_palette_b = ['#E9D98B', '#66940A']
-feedbacks = "src/streamlit/fichiers/feedback/feedback.csv"
+
 
 @st.cache_data()
 def load_css(file_name):
